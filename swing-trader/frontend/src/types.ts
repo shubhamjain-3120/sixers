@@ -118,6 +118,12 @@ export interface CandidateDetail extends CandidateRow {
   news_headlines: PerHeadline[]
 }
 
+export interface ScanStatus {
+  last_scan_at: string | null
+  candidate_count: number
+  running: boolean
+}
+
 export interface OhlcvBar {
   date: string
   open: number | null

@@ -136,6 +136,8 @@ def get_candidates(
                 resistance_pct_away=resistance_pct,
                 rsi_14=s.rsi_14,
                 score=s.score,
+                dist_from_20dma_pct=s.dist_from_20dma_pct,
+                dist_from_50dma_pct=s.dist_from_50dma_pct,
                 sparkline_data=sparkline,
                 badge=badge,
                 llm_summary=news_cls.summary if news_cls else None,

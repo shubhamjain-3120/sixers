@@ -29,7 +29,10 @@ export default function CandidateRow({ candidate, onOrderPlaced }: Props) {
 
   return (
     <>
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-gray-700">
+      <div
+        className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-gray-700 cursor-pointer"
+        onClick={() => navigate(`/candidate/${candidate.symbol}`)}
+      >
         {/* Top row */}
         <div className="flex flex-wrap items-start gap-3">
           <div className="flex items-center gap-2 min-w-[140px]">

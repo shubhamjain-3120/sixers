@@ -17,6 +17,7 @@ export const updateConfig = (data: Partial<Config>) => api.put<Config>('/config'
 export const refreshUniverse = () => api.post('/universe/refresh').then(r => r.data)
 
 // Scan
+export const getScanStatus = () => api.get<import('../types').ScanStatus>('/scan/status').then(r => r.data)
 export const getCandidates = (includeRed = false) =>
   api.get<CandidateRow[]>('/scan/candidates', { params: { include_red: includeRed } }).then(r => r.data)
 export const getCandidateDetail = (symbol: string) =>
