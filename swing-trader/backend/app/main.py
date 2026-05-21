@@ -15,6 +15,7 @@ def _getaddrinfo_prefer_ipv4(host, port, family=0, type=0, proto=0, flags=0):
 
 socket.getaddrinfo = _getaddrinfo_prefer_ipv4
 from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
 from app.db.session import engine, run_migrations
 from app.db.models import Base
 from app.jobs.scheduler import create_scheduler
@@ -44,9 +45,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Swing Trader API", version="1.0.0", lifespan=lifespan)
 
+_cors_origins = ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
+if settings.frontend_base_url and settings.frontend_base_url not in _cors_origins:
+    _cors_origins.append(settings.frontend_base_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

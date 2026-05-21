@@ -32,6 +32,8 @@ export interface CandidateRow {
   resistance_pct_away: number | null
   rsi_14: number | null
   score: number
+  dist_from_20dma_pct: number | null
+  dist_from_50dma_pct: number | null
   sparkline_data: number[]
   badge: 'GREEN' | 'YELLOW' | 'RED'
   llm_summary: string | null
@@ -107,8 +109,6 @@ export interface PerHeadline {
 export interface CandidateDetail extends CandidateRow {
   sector: string | null
   pct_below_50d_high: number | null
-  dist_from_20dma_pct: number | null
-  dist_from_50dma_pct: number | null
   volume_ratio: number | null
   swing_low_30d: number | null
   swing_high_30d: number | null

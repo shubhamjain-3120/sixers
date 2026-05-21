@@ -1,7 +1,9 @@
 import axios from 'axios'
 import type { Config, AuthStatus, CandidateRow, CandidateDetail, OhlcvBar, BlockDealOut, OpenPosition, ClosedTrade, TradeDetail, StatsSummary, EquityPoint, PerHeadline } from '../types'
 
-const api = axios.create({ baseURL: '/api' })
+// VITE_API_URL is set at build time on Render (e.g. https://swing-trader-api.fly.dev).
+// In local dev it is unset, so requests fall through to Vite's proxy → localhost:8000.
+const api = axios.create({ baseURL: (import.meta.env.VITE_API_URL ?? '') + '/api' })
 
 // Auth
 export const getAuthStatus = () => api.get<AuthStatus>('/auth/status').then(r => r.data)

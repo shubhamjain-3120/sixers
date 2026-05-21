@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { placeTrade, getConfig, getStatsSummary } from '../api/client'
-import type { CandidateDetail, Config, StatsSummary } from '../types'
+import type { CandidateRow, Config, StatsSummary } from '../types'
 
 interface Props {
-  candidate: CandidateDetail
+  candidate: CandidateRow
   onClose: () => void
   onSuccess: () => void
 }

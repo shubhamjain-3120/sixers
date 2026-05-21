@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: swing-trader-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://swing-trader-api.fly.dev  # replace with your actual Fly app URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

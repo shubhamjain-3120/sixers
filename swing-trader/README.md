@@ -21,51 +21,81 @@ npm install
 npm run dev                 # runs on :5174
 ```
 
-## SEBI static IP requirement (mandatory before live trading)
+## Production deployment (Fly.io + Supabase + Render)
 
-Since April 1, 2026, Zerodha rejects API orders from unregistered IPs. You must register the **outbound public IP of the machine running the backend** in your Zerodha profile before any order placement will work.
+### Architecture
+- **Backend:** Fly.io (Mumbai region, dedicated IPv4, ~$4/mo)
+- **Database:** Supabase PostgreSQL (free tier)
+- **Frontend:** Render Static Site (free tier)
 
-### Step-by-step
+### Step 1 — Supabase database
 
-1. Find the public IP of your backend server:
-   ```bash
-   curl -s https://api.ipify.org
-   ```
-2. Log in to Zerodha → **Profile → API** (or equivalent static-IP registration page) and add that IP.
-3. Verify registration took effect — Zerodha typically activates within minutes.
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to **Project Settings → Database → Connection string → URI**
+3. Copy the **direct connection** string (port 5432, NOT the pooler on port 6543)
+4. It looks like: `postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres`
 
-### Deployment options
-
-| Option | Static IP? | Cost | Notes |
-|--------|-----------|------|-------|
-| Home server (fiber/cable ISP) | Usually **No** | Free | IP changes on router reboot — orders will break silently |
-| Home server + static IP ISP add-on | Yes | ~₹200–500/mo | Ask your ISP; easiest if you self-host |
-| VPS (Railway, Render, Hetzner, DigitalOcean) | **Yes** — fixed per instance | $5–12/mo | Recommended; also solves uptime (keeps scheduler running) |
-| Home server + Tailscale exit node | Effectively yes | Free | Advanced; exit node must have static IP |
-
-**Recommendation:** Deploy the backend to a cheap VPS (Hetzner or DigitalOcean $6/mo droplet). Register that VPS's IP with Zerodha. Run the frontend from the same VPS or your local machine — only the backend needs the registered IP since it's the one placing orders.
-
-### Deploying to a VPS
+### Step 2 — Fly.io backend
 
 ```bash
-# On the VPS (Ubuntu 22.04+)
-git clone <your-repo> swing-trader
-cd swing-trader/backend
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env          # fill in keys
-# Run behind a process manager
-pip install gunicorn
-gunicorn app.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+# Install flyctl: https://fly.io/docs/hands-on/install-flyctl/
+cd backend
+
+# Launch (first time only — fly.toml is already committed)
+fly launch --no-deploy --name swing-trader-api
+
+# Add a dedicated IPv4 (required for Zerodha static IP registration)
+fly ips allocate-v4 --shared=false
+
+# Find your IP
+fly ips list
+# → Register this IP in Zerodha: Profile → API → Static IP
+
+# Set all secrets
+fly secrets set \
+  KITE_API_KEY=your_key \
+  KITE_API_SECRET=your_secret \
+  KITE_REDIRECT_URL=https://swing-trader-api.fly.dev/api/auth/kite/callback \
+  OPENAI_API_KEY=sk-... \
+  DATABASE_URL="postgresql://postgres:password@db.xxx.supabase.co:5432/postgres" \
+  APP_BASE_URL=https://swing-trader-api.fly.dev \
+  FRONTEND_BASE_URL=https://your-site.onrender.com
+
+# Deploy
+fly deploy
 ```
 
-Use `systemd` or `supervisor` to keep it alive. Set `KITE_REDIRECT_URL` and `APP_BASE_URL` to your VPS's domain/IP:
+Also update the **Redirect URL** in your Kite app at developers.kite.trade to:
+`https://swing-trader-api.fly.dev/api/auth/kite/callback`
+
+> **Important:** `auto_stop_machines = false` is set in `fly.toml` so the VM stays alive for APScheduler. Do not change this — a sleeping machine misses scheduled jobs.
+
+### Step 3 — Render frontend
+
+1. Connect your repo to [render.com](https://render.com)
+2. Render detects `render.yaml` automatically — it will create the static site
+3. Set the `VITE_API_URL` env var to your Fly.io app URL: `https://swing-trader-api.fly.dev`
+4. Deploy
+
+### Step 4 — SEBI static IP registration
+
+Since April 1, 2026, Zerodha rejects API orders from unregistered IPs.
+
 ```bash
-KITE_REDIRECT_URL=https://your-vps-ip-or-domain/api/auth/kite/callback
-APP_BASE_URL=https://your-vps-ip-or-domain
+fly ips list   # find your dedicated IPv4
 ```
 
-> **Important:** If you redeploy to a different server or your IP changes for any reason, re-register the new IP with Zerodha immediately — existing GTTs at Zerodha will still protect open positions, but no new orders can be placed until the IP is updated.
+Register that IP in Zerodha → **Profile → API → Static IP**. This is a one-time step per deployment. GTTs already at Zerodha are unaffected by IP changes; only new order placement requires the registered IP.
+
+### Cost summary
+
+| Service | Plan | Cost |
+|---------|------|------|
+| Fly.io (backend) | shared-cpu-1x 256MB | ~$2/mo |
+| Fly.io dedicated IPv4 | | $2/mo |
+| Supabase | Free tier (500MB) | Free |
+| Render (frontend) | Static site | Free |
+| **Total** | | **~$4/mo** |
 
 ## Environment variables
 
@@ -81,19 +111,19 @@ See `.env.example`. Required before trading:
 | # | Milestone | Status |
 |---|-----------|--------|
 | M-1 | Skeleton + DB + Config | ✅ Done |
-| M-2 | Kite auth | ⬜ |
-| M-3 | Universe (NSE CSV) | ⬜ |
-| M-4 | Daily scanner | ⬜ |
-| M-5 | Candidates UI | ⬜ |
-| M-6 | News + LLM classifier | ⬜ |
-| M-7 | Order placement + OCO GTT | ⬜ |
-| M-8 | Position cycle (trailing) | ⬜ |
-| M-9 | Exit reconciliation | ⬜ |
-| M-10 | Time-stop | ⬜ |
-| M-11 | Telegram login reminder | ⬜ |
-| M-12 | Journal & stats | ⬜ |
-| M-13 | 09:00 re-validation | ⬜ |
-| M-14 | Polish + deploy | ⬜ |
+| M-2 | Kite auth | ✅ Done |
+| M-3 | Universe (NSE CSV) | ✅ Done |
+| M-4 | Daily scanner | ✅ Done |
+| M-5 | Candidates UI | ✅ Done |
+| M-6 | News + LLM classifier | ✅ Done |
+| M-7 | Order placement + OCO GTT | ✅ Done |
+| M-8 | Position cycle (trailing) | ✅ Done |
+| M-9 | Exit reconciliation | ✅ Done |
+| M-10 | Time-stop | ✅ Done |
+| M-11 | Telegram login reminder | ✅ Done |
+| M-12 | Journal & stats | ✅ Done |
+| M-13 | 09:00 re-validation | ✅ Done |
+| M-14 | Polish + deploy | ✅ Done |
 
 ## Architecture
 
