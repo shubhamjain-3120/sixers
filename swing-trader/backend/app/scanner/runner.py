@@ -145,19 +145,43 @@ def _do_scan(db: Session):
 
 
 def revalidate_candidates(db: Session, kite):
-    """Refresh LTP for yesterday's candidates without re-running LLM."""
-    from datetime import date, timedelta
-    yesterday = date.today() - timedelta(days=1)
+    """Refresh LTP for the most-recent trading day's candidates without re-running LLM.
+
+    Finds the latest scan_date that has qualifying rows — this correctly handles
+    Mondays (Friday's scans) and holiday gaps without hardcoding 'yesterday'.
+
+    Per spec: updates ltp and recomputes LTP-dependent display fields from stored
+    OHLCV. Does NOT touch score, badge, or LLM verdict.
+    """
+    from app.scanner.signals import pct_below_high, dist_from_sma_pct, pivot_s1_r1
+
     cfg = db.query(Config).filter(Config.id == 1).first()
     min_score = cfg.min_score_threshold if cfg else 60.0
 
+    # Find the most recent scan_date that has qualifying candidates.
+    # Using a subquery so we get the actual date, not just any row.
+    latest = (
+        db.query(DailyScan.scan_date)
+        .filter(DailyScan.score >= min_score)
+        .order_by(DailyScan.scan_date.desc())
+        .first()
+    )
+    if not latest:
+        logger.info("No qualifying candidates found for revalidation")
+        return
+
+    last_scan_date = latest.scan_date
+
+    # Guard: never revalidate the scan that ran today (it's already fresh)
+    if last_scan_date >= date.today():
+        logger.info("Skipping revalidation — most recent scan is today")
+        return
+
     scans = (
         db.query(DailyScan)
-        .filter(DailyScan.scan_date == yesterday, DailyScan.score >= min_score)
+        .filter(DailyScan.scan_date == last_scan_date, DailyScan.score >= min_score)
         .all()
     )
-    if not scans:
-        return
 
     symbols = [f"NSE:{s.symbol}" for s in scans]
     try:
@@ -168,11 +192,47 @@ def revalidate_candidates(db: Session, kite):
 
     for s in scans:
         key = f"NSE:{s.symbol}"
-        if key in ltp_data:
-            ltp = ltp_data[key].get("last_price")
-            if ltp:
-                s.ltp = ltp
-                if s.prev_close and s.prev_close > 0:
-                    pass  # pct_change derived on read
+        if key not in ltp_data:
+            continue
+        ltp = ltp_data[key].get("last_price")
+        if not ltp:
+            continue
+
+        s.ltp = ltp
+
+        # Recompute LTP-dependent display fields using stored OHLCV.
+        # Fetch up to 60 bars ending on last_scan_date (oldest → newest after reverse).
+        bars = (
+            db.query(OhlcvDaily)
+            .filter(OhlcvDaily.symbol == s.symbol, OhlcvDaily.date <= last_scan_date)
+            .order_by(OhlcvDaily.date.desc())
+            .limit(60)
+            .all()
+        )
+        if not bars:
+            continue
+
+        bars = list(reversed(bars))  # now oldest → newest
+        highs  = [b.high  for b in bars if b.high  is not None]
+        lows   = [b.low   for b in bars if b.low   is not None]
+        closes = [b.close for b in bars if b.close is not None]
+
+        if len(highs) >= 20:
+            s.pct_below_20d_high = pct_below_high(ltp, highs, 20)
+        if len(highs) >= 50:
+            s.pct_below_50d_high = pct_below_high(ltp, highs, 50)
+        if len(closes) >= 20:
+            s.dist_from_20dma_pct = dist_from_sma_pct(ltp, closes, 20)
+        if len(closes) >= 50:
+            s.dist_from_50dma_pct = dist_from_sma_pct(ltp, closes, 50)
+
+        # Pivot S/R depends on previous session's high/low/close + fresh LTP
+        if len(bars) >= 2:
+            prev = bars[-2]
+            if prev.high and prev.low and prev.close:
+                s.pivot_support, s.pivot_resistance = pivot_s1_r1(
+                    prev.high, prev.low, prev.close, ltp
+                )
+
     db.commit()
-    logger.info(f"Revalidated {len(scans)} candidates")
+    logger.info(f"Revalidated {len(scans)} candidates from {last_scan_date}")
