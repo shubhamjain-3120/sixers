@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getConfig, updateConfig, getKiteLoginUrl, refreshUniverse, testTelegram } from '../api/client'
+import { getConfig, updateConfig, getKiteLoginUrl, refreshUniverse, testTelegram, triggerScan } from '../api/client'
 import type { Config } from '../types'
 
 export default function Settings() {
@@ -57,6 +57,15 @@ export default function Settings() {
     }
   }
 
+  const handleRunScan = async () => {
+    try {
+      await triggerScan()
+      setMsg('Scan started (runs in background). Check the dashboard in a few minutes.')
+    } catch (e: any) {
+      setMsg(`Scan failed to start: ${e.message}`)
+    }
+  }
+
   if (!cfg) return <div className="max-w-xl mx-auto px-4 py-10 text-gray-400">Loading…</div>
 
   return (
@@ -99,6 +108,7 @@ export default function Settings() {
       <Section title="Actions">
         <div className="flex flex-wrap gap-3">
           <button onClick={handleRefreshUniverse} className="btn-secondary">Refresh Universe</button>
+          <button onClick={handleRunScan} className="btn-secondary">Run Scan</button>
           <button onClick={handleTestTelegram} className="btn-secondary">Test Telegram</button>
         </div>
       </Section>

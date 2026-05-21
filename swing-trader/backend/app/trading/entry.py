@@ -141,16 +141,22 @@ def execute_force_exit(db: Session, trade: Trade):
         except Exception as e:
             logger.warning(f"GTT cancel on force exit: {e}")
 
+    # Kite API does not allow market orders without market protection for CNC.
+    # Use a limit order priced 1% below LTP to guarantee immediate fill.
+    ltp_data = kite.ltp([f"NSE:{trade.symbol}"])
+    ltp = ltp_data[f"NSE:{trade.symbol}"]["last_price"]
+    limit_price = round(ltp - 0.5, 1)
+
     order_id = kite.place_order(
         variety="regular",
         exchange="NSE",
         tradingsymbol=trade.symbol,
         transaction_type="SELL",
         quantity=trade.qty,
-        order_type="MARKET",
+        order_type="LIMIT",
+        price=limit_price,
         product="CNC",
         validity="DAY",
-        market_protection=2,
     )
     log_order(db, trade.id, "MARKET_SELL", "placed", kite_order_id=str(order_id))
 
