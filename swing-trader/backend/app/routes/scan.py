@@ -52,39 +52,57 @@ def get_candidates(
         .all()
     )
 
+    symbols = [s.symbol for s in scans]
+    if not symbols:
+        return []
+
+    # Batch all per-symbol lookups to avoid N+1 queries
+    instruments = {
+        r.symbol: r
+        for r in db.query(Instrument).filter(Instrument.symbol.in_(symbols)).all()
+    }
+    setups = {
+        r.symbol: r
+        for r in db.query(SetupClassification)
+        .filter(SetupClassification.symbol.in_(symbols), SetupClassification.scan_date == scan_date)
+        .all()
+    }
+    news_map = {
+        r.symbol: r
+        for r in db.query(NewsClassification)
+        .filter(NewsClassification.symbol.in_(symbols), NewsClassification.classification_date == scan_date)
+        .all()
+    }
+
+    from sqlalchemy import text
+    placeholders = ", ".join(f"'{sym}'" for sym in symbols)
+    ohlcv_raw = db.execute(
+        text(
+            f"""
+            SELECT symbol, close, date FROM (
+                SELECT symbol, close, date,
+                       ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC) AS rn
+                FROM ohlcv_daily
+                WHERE symbol IN ({placeholders})
+            ) t WHERE rn <= 30
+            ORDER BY symbol, date ASC
+            """
+        )
+    ).fetchall()
+    sparklines: dict[str, list] = {}
+    for row in ohlcv_raw:
+        sparklines.setdefault(row.symbol, []).append(row.close)
+
     result = []
     for s in scans:
-        inst = db.query(Instrument).filter(Instrument.symbol == s.symbol).first()
-        setup = (
-            db.query(SetupClassification)
-            .filter(
-                SetupClassification.symbol == s.symbol,
-                SetupClassification.scan_date == scan_date,
-            )
-            .first()
-        )
-        news_cls = (
-            db.query(NewsClassification)
-            .filter(
-                NewsClassification.symbol == s.symbol,
-                NewsClassification.classification_date == scan_date,
-            )
-            .first()
-        )
-
+        setup = setups.get(s.symbol)
         badge = setup.badge if setup else "YELLOW"
         if not include_red and badge == "RED":
             continue
 
-        # sparkline: last 30 closes from ohlcv_daily
-        ohlcv_rows = (
-            db.query(OhlcvDaily)
-            .filter(OhlcvDaily.symbol == s.symbol)
-            .order_by(desc(OhlcvDaily.date))
-            .limit(30)
-            .all()
-        )
-        sparkline = [r.close for r in reversed(ohlcv_rows)]
+        inst = instruments.get(s.symbol)
+        news_cls = news_map.get(s.symbol)
+        sparkline = sparklines.get(s.symbol, [])
 
         pct_change = None
         if s.ltp and s.prev_close and s.prev_close > 0:
