@@ -20,6 +20,7 @@ class Config(Base):
     trail_lock_floor_pct = Column(Float, default=0.5)
     max_concurrent_positions = Column(Integer, default=8)
     min_score_threshold = Column(Float, default=60.0)
+    min_shubham_score_threshold = Column(Float, default=60.0)
     telegram_bot_token = Column(String, default="")
     telegram_chat_id = Column(String, default="")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

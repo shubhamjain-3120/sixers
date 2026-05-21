@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from app.db.session import get_db
 from app.db.models import DailyScan, Instrument, SetupClassification, NewsClassification, OhlcvDaily, BlockDeal
 from app.schemas.scan import CandidateRow, ScanStatus, OhlcvBar, BlockDealOut, CandidateDetail, PerHeadline
@@ -14,9 +14,12 @@ router = APIRouter(prefix="/api/scan", tags=["scan"])
 @router.get("/status", response_model=ScanStatus)
 def scan_status(db: Session = Depends(get_db)):
     from app.scanner import runner
-    cfg_row = db.query(DailyScan).order_by(desc(DailyScan.scan_date)).first()
-    last_scan = cfg_row.scan_date.isoformat() if cfg_row else None
-    count = db.query(DailyScan).filter(DailyScan.scan_date == date.today()).count()
+    row = db.query(
+        func.max(DailyScan.scan_date).label("last_date"),
+        func.count(DailyScan.id).filter(DailyScan.scan_date == date.today()).label("today_count"),
+    ).first()
+    last_scan = row.last_date.isoformat() if row and row.last_date else None
+    count = row.today_count if row else 0
     return ScanStatus(last_scan_at=last_scan, candidate_count=count, running=runner._scan_running)
 
 
@@ -35,63 +38,55 @@ def get_candidates(
     include_red: bool = False,
     db: Session = Depends(get_db)
 ):
-    if scan_date is None:
-        latest = db.query(DailyScan.scan_date).order_by(desc(DailyScan.scan_date)).first()
-        if not latest:
-            return []
-        scan_date = latest[0]
-
+    from sqlalchemy import and_
     from app.db.models import Config
-    cfg = db.query(Config).filter(Config.id == 1).first()
-    min_score = cfg.min_score_threshold if cfg else 60.0
 
-    scans = (
-        db.query(DailyScan)
-        .filter(DailyScan.scan_date == scan_date, DailyScan.score >= min_score)
-        .order_by(desc(DailyScan.score))
+    # Two queries: config + one joined query for all candidate data
+    cfg_row = db.query(Config.min_score_threshold, Config.min_shubham_score_threshold).filter(Config.id == 1).first()
+    min_score = cfg_row.min_score_threshold if cfg_row and cfg_row.min_score_threshold is not None else 60.0
+    min_shubham = cfg_row.min_shubham_score_threshold if cfg_row and cfg_row.min_shubham_score_threshold is not None else 60.0
+
+    if scan_date is None:
+        scan_date = db.query(func.max(DailyScan.scan_date)).scalar()
+        if not scan_date:
+            return []
+
+    rows = (
+        db.query(DailyScan, Instrument, SetupClassification, NewsClassification)
+        .outerjoin(Instrument, Instrument.symbol == DailyScan.symbol)
+        .outerjoin(
+            SetupClassification,
+            and_(
+                SetupClassification.symbol == DailyScan.symbol,
+                SetupClassification.scan_date == scan_date,
+            ),
+        )
+        .outerjoin(
+            NewsClassification,
+            and_(
+                NewsClassification.symbol == DailyScan.symbol,
+                NewsClassification.classification_date == scan_date,
+            ),
+        )
+        .filter(
+            DailyScan.scan_date == scan_date,
+            DailyScan.score >= min_score,
+            DailyScan.shubham_score >= min_shubham,
+        )
+        .order_by(desc(DailyScan.shubham_score), desc(DailyScan.score))
         .all()
     )
 
-    symbols = [s.symbol for s in scans]
-    if not symbols:
-        return []
-
-    # Batch all per-symbol lookups to avoid N+1 queries
-    instruments = {
-        r.symbol: r
-        for r in db.query(Instrument).filter(Instrument.symbol.in_(symbols)).all()
-    }
-    setups = {
-        r.symbol: r
-        for r in db.query(SetupClassification)
-        .filter(SetupClassification.symbol.in_(symbols), SetupClassification.scan_date == scan_date)
-        .all()
-    }
-    news_map = {
-        r.symbol: r
-        for r in db.query(NewsClassification)
-        .filter(NewsClassification.symbol.in_(symbols), NewsClassification.classification_date == scan_date)
-        .all()
-    }
-
-    sparklines: dict[str, list] = {}
-
     result = []
-    for s in scans:
-        setup = setups.get(s.symbol)
+    for s, inst, setup, news_cls in rows:
         badge = setup.badge if setup else "YELLOW"
         if not include_red and badge == "RED":
             continue
-
-        inst = instruments.get(s.symbol)
-        news_cls = news_map.get(s.symbol)
-        sparkline = sparklines.get(s.symbol, [])
 
         pct_change = None
         if s.ltp and s.prev_close and s.prev_close > 0:
             pct_change = (s.ltp - s.prev_close) / s.prev_close * 100
 
-        # Support / resistance % away from LTP
         support_pct = None
         if s.pivot_support and s.ltp and s.ltp > 0:
             support_pct = (s.pivot_support - s.ltp) / s.ltp * 100
@@ -122,7 +117,7 @@ def get_candidates(
                 shubham_score=s.shubham_score,
                 dist_from_20dma_pct=s.dist_from_20dma_pct,
                 dist_from_50dma_pct=s.dist_from_50dma_pct,
-                sparkline_data=sparkline,
+                sparkline_data=[],
                 badge=badge,
                 llm_summary=news_cls.summary if news_cls else None,
                 scan_date=s.scan_date,
@@ -168,59 +163,58 @@ def get_block_deals(symbol: str, days: int = 5, db: Session = Depends(get_db)):
 
 @router.get("/detail/{symbol}", response_model=CandidateDetail)
 def get_candidate_detail(symbol: str, db: Session = Depends(get_db)):
+    from sqlalchemy import and_
+    import json as _json
+
     sym = symbol.upper()
-    latest_scan = (
-        db.query(DailyScan)
+
+    # Single JOIN query: latest scan + instrument + badge + news
+    latest_scan_sq = (
+        db.query(func.max(DailyScan.scan_date))
         .filter(DailyScan.symbol == sym)
-        .order_by(desc(DailyScan.scan_date))
+        .scalar_subquery()
+    )
+    row = (
+        db.query(DailyScan, Instrument, SetupClassification, NewsClassification)
+        .outerjoin(Instrument, Instrument.symbol == DailyScan.symbol)
+        .outerjoin(
+            SetupClassification,
+            and_(
+                SetupClassification.symbol == DailyScan.symbol,
+                SetupClassification.scan_date == DailyScan.scan_date,
+            ),
+        )
+        .outerjoin(
+            NewsClassification,
+            and_(
+                NewsClassification.symbol == DailyScan.symbol,
+                NewsClassification.classification_date == DailyScan.scan_date,
+            ),
+        )
+        .filter(DailyScan.symbol == sym, DailyScan.scan_date == latest_scan_sq)
         .first()
     )
-    if not latest_scan:
+    if not row:
         raise HTTPException(status_code=404, detail="no_scan_data")
 
-    inst = db.query(Instrument).filter(Instrument.symbol == sym).first()
-    setup = (
-        db.query(SetupClassification)
-        .filter(SetupClassification.symbol == sym, SetupClassification.scan_date == latest_scan.scan_date)
-        .first()
-    )
-
+    s, inst, setup, news_cls = row
     badge = setup.badge if setup else "YELLOW"
 
     pct_change = None
-    if latest_scan.ltp and latest_scan.prev_close and latest_scan.prev_close > 0:
-        pct_change = (latest_scan.ltp - latest_scan.prev_close) / latest_scan.prev_close * 100
+    if s.ltp and s.prev_close and s.prev_close > 0:
+        pct_change = (s.ltp - s.prev_close) / s.prev_close * 100
 
     support_pct = None
-    if latest_scan.pivot_support and latest_scan.ltp and latest_scan.ltp > 0:
-        support_pct = (latest_scan.pivot_support - latest_scan.ltp) / latest_scan.ltp * 100
+    if s.pivot_support and s.ltp and s.ltp > 0:
+        support_pct = (s.pivot_support - s.ltp) / s.ltp * 100
     resistance_pct = None
-    if latest_scan.pivot_resistance and latest_scan.ltp and latest_scan.ltp > 0:
-        resistance_pct = (latest_scan.pivot_resistance - latest_scan.ltp) / latest_scan.ltp * 100
+    if s.pivot_resistance and s.ltp and s.ltp > 0:
+        resistance_pct = (s.pivot_resistance - s.ltp) / s.ltp * 100
 
     high_20d = None
-    if latest_scan.ltp and latest_scan.pct_below_20d_high:
-        high_20d = latest_scan.ltp / (1 - latest_scan.pct_below_20d_high / 100)
+    if s.ltp and s.pct_below_20d_high:
+        high_20d = s.ltp / (1 - s.pct_below_20d_high / 100)
 
-    sparkline_rows = (
-        db.query(OhlcvDaily)
-        .filter(OhlcvDaily.symbol == sym)
-        .order_by(desc(OhlcvDaily.date))
-        .limit(30)
-        .all()
-    )
-    sparkline = [r.close for r in reversed(sparkline_rows)]
-
-    news_cls = (
-        db.query(NewsClassification)
-        .filter(
-            NewsClassification.symbol == sym,
-            NewsClassification.classification_date == latest_scan.scan_date,
-        )
-        .first()
-    )
-
-    import json as _json
     per_headlines: list[PerHeadline] = []
     if news_cls and news_cls.per_headline_json and news_cls.headlines_json:
         try:
@@ -243,30 +237,30 @@ def get_candidate_detail(symbol: str, db: Session = Depends(get_db)):
         name=inst.name if inst else None,
         segment=inst.segment if inst else "NIFTY50_STOCK",
         sector=inst.sector if inst else None,
-        ltp=latest_scan.ltp,
-        prev_close=latest_scan.prev_close,
+        ltp=s.ltp,
+        prev_close=s.prev_close,
         pct_change_today=pct_change,
         high_20d=high_20d,
-        pct_below_20d_high=latest_scan.pct_below_20d_high,
-        pct_below_50d_high=latest_scan.pct_below_50d_high,
-        dist_from_20dma_pct=latest_scan.dist_from_20dma_pct,
-        dist_from_50dma_pct=latest_scan.dist_from_50dma_pct,
-        volume_ratio=latest_scan.volume_ratio,
-        swing_low_30d=latest_scan.swing_low_30d,
-        swing_high_30d=latest_scan.swing_high_30d,
-        support=latest_scan.pivot_support,
+        pct_below_20d_high=s.pct_below_20d_high,
+        pct_below_50d_high=s.pct_below_50d_high,
+        dist_from_20dma_pct=s.dist_from_20dma_pct,
+        dist_from_50dma_pct=s.dist_from_50dma_pct,
+        volume_ratio=s.volume_ratio,
+        swing_low_30d=s.swing_low_30d,
+        swing_high_30d=s.swing_high_30d,
+        support=s.pivot_support,
         support_pct_away=support_pct,
-        resistance=latest_scan.pivot_resistance,
+        resistance=s.pivot_resistance,
         resistance_pct_away=resistance_pct,
-        rsi_14=latest_scan.rsi_14,
-        score=latest_scan.score,
-        shubham_score=latest_scan.shubham_score,
-        green_after_red=latest_scan.green_after_red,
-        sparkline_data=sparkline,
+        rsi_14=s.rsi_14,
+        score=s.score,
+        shubham_score=s.shubham_score,
+        green_after_red=s.green_after_red,
+        sparkline_data=[],
         badge=badge,
         llm_summary=news_cls.summary if news_cls else None,
         news_verdict=news_cls.verdict if news_cls else None,
         news_confidence=news_cls.confidence if news_cls else None,
         news_headlines=per_headlines,
-        scan_date=latest_scan.scan_date,
+        scan_date=s.scan_date,
     )

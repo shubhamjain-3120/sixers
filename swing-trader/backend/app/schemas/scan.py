@@ -12,6 +12,8 @@ class CandidateRow(BaseModel):
     pct_change_today: Optional[float] = None
     high_20d: Optional[float] = None
     pct_below_20d_high: Optional[float] = None
+    dist_from_20dma_pct: Optional[float] = None
+    dist_from_50dma_pct: Optional[float] = None
     support: Optional[float] = None
     support_pct_away: Optional[float] = None
     resistance: Optional[float] = None
@@ -39,8 +41,6 @@ class PerHeadline(BaseModel):
 class CandidateDetail(CandidateRow):
     sector: Optional[str] = None
     pct_below_50d_high: Optional[float] = None
-    dist_from_20dma_pct: Optional[float] = None
-    dist_from_50dma_pct: Optional[float] = None
     volume_ratio: Optional[float] = None
     swing_low_30d: Optional[float] = None
     swing_high_30d: Optional[float] = None

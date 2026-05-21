@@ -87,7 +87,8 @@ export default function Settings() {
         <Field label="Total Capital (₹)" value={cfg.total_capital_inr} onChange={v => handleChange('total_capital_inr', v)} />
         <Field label="Allocation per trade (%)" value={cfg.nifty50_alloc_pct} onChange={v => handleChange('nifty50_alloc_pct', v)} step={0.5} />
         <Field label="Max concurrent positions" value={cfg.max_concurrent_positions} onChange={v => handleChange('max_concurrent_positions', v)} />
-        <Field label="Min score threshold" value={cfg.min_score_threshold} onChange={v => handleChange('min_score_threshold', v)} />
+        <Field label="Min pullback score" value={cfg.min_score_threshold} onChange={v => handleChange('min_score_threshold', v)} />
+        <Field label="Min Shubham score" value={cfg.min_shubham_score_threshold} onChange={v => handleChange('min_shubham_score_threshold', v)} />
       </Section>
 
       {/* Exit Rules */}

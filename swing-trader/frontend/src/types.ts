@@ -9,6 +9,7 @@ export interface Config {
   trail_lock_floor_pct: number
   max_concurrent_positions: number
   min_score_threshold: number
+  min_shubham_score_threshold: number
   updated_at: string | null
 }
 

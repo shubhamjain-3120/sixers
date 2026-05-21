@@ -17,7 +17,7 @@ Output ONLY valid JSON matching this schema:
   ],
   "overall_verdict": "NOISE" | "FUNDAMENTAL_RISK" | "MIXED" | "INSUFFICIENT_DATA",
   "confidence": <float 0.0 to 1.0>,
-  "summary": "<one sentence, max 25 words>"
+  "summary": "<plain-English explanation of what is causing the recent price move, 1-2 sentences, max 40 words. If no headline plausibly explains the move, return an empty string. Do NOT restate the verdict or comment on data quality — only describe the driver if one exists.>"
 }
 Classification rules:
 - NOISE: block deals, sector/macro/geopolitical moves, profit booking, routine business updates, broker price-target changes without rationale
@@ -86,8 +86,8 @@ def classify_news(
         }
 
     if not headlines:
-        _save_classification(db, symbol, scan_date, headlines, [], "INSUFFICIENT_DATA", 0.0, "No headlines found", "")
-        return {"verdict": "INSUFFICIENT_DATA", "confidence": 0.0, "summary": "No headlines found", "per_headline": []}
+        _save_classification(db, symbol, scan_date, headlines, [], "INSUFFICIENT_DATA", 0.0, "", "")
+        return {"verdict": "INSUFFICIENT_DATA", "confidence": 0.0, "summary": "", "per_headline": []}
 
     user_msg = _build_user_message(symbol, name, sector, headlines, ltp, pct_drop, n_sessions, sector_index_name, sector_change_pct)
     client = OpenAI(api_key=settings.openai_api_key)
@@ -119,8 +119,8 @@ def classify_news(
             import time; time.sleep(2 ** attempt)
 
     # Both attempts failed
-    _save_classification(db, symbol, scan_date, headlines, [], "INSUFFICIENT_DATA", 0.0, "Classifier unavailable", "")
-    return {"verdict": "INSUFFICIENT_DATA", "confidence": 0.0, "summary": "Classifier unavailable", "per_headline": []}
+    _save_classification(db, symbol, scan_date, headlines, [], "INSUFFICIENT_DATA", 0.0, "", "")
+    return {"verdict": "INSUFFICIENT_DATA", "confidence": 0.0, "summary": "", "per_headline": []}
 
 
 def _save_classification(

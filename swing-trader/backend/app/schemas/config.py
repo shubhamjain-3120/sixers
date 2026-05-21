@@ -14,6 +14,7 @@ class ConfigRead(BaseModel):
     trail_lock_floor_pct: float
     max_concurrent_positions: int
     min_score_threshold: float
+    min_shubham_score_threshold: float
     updated_at: Optional[datetime] = None
 
     class Config:
@@ -30,3 +31,4 @@ class ConfigUpdate(BaseModel):
     trail_lock_floor_pct: Optional[float] = None
     max_concurrent_positions: Optional[int] = None
     min_score_threshold: Optional[float] = None
+    min_shubham_score_threshold: Optional[float] = None

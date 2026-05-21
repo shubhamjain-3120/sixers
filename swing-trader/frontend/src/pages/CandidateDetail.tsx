@@ -5,7 +5,7 @@ import type { CandidateDetail, OhlcvBar, BlockDealOut } from '../types'
 import Badge from '../components/Badge'
 import PlaceOrderModal from '../components/PlaceOrderModal'
 import {
-  ComposedChart, Bar, Line, XAxis, YAxis, Tooltip,
+  LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, ReferenceLine,
 } from 'recharts'
 
@@ -133,7 +133,6 @@ export default function CandidateDetail() {
         <h1 className="text-2xl font-bold text-white">{detail.symbol}</h1>
         {detail.name && <span className="text-gray-400 text-sm">{detail.name}</span>}
         {detail.sector && <span className="text-gray-500 text-xs">· {detail.sector}</span>}
-        <Badge badge={detail.badge} />
         {detail.segment === 'ETF' && (
           <span className="text-xs text-blue-400 border border-blue-800 rounded px-1">ETF</span>
         )}
@@ -147,31 +146,40 @@ export default function CandidateDetail() {
             S1 ₹{detail.support.toFixed(2)} · R1 ₹{detail.resistance?.toFixed(2) ?? '–'}
           </p>
         )}
-        <ResponsiveContainer width="100%" height={240}>
-          <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
             <XAxis
               dataKey="date"
               tick={{ fill: '#6b7280', fontSize: 9 }}
               tickFormatter={v => v.slice(5)}
-              interval={Math.floor(chartData.length / 6)}
+              interval={6}
             />
-            <YAxis domain={['auto', 'auto']} tick={{ fill: '#6b7280', fontSize: 10 }} width={55} />
+            <YAxis domain={['auto', 'auto']} tick={{ fill: '#6b7280', fontSize: 10 }} width={58} />
             <Tooltip
               contentStyle={{ background: '#111827', border: '1px solid #374151', color: '#fff', fontSize: 12 }}
               formatter={(v: number, name: string) => [`₹${v?.toFixed(2)}`, name]}
               labelFormatter={l => `Date: ${l}`}
             />
-            <Bar dataKey="close" fill="#3b82f6" opacity={0.55} name="Close" />
             {detail.support && (
               <ReferenceLine y={detail.support} stroke="#ef4444" strokeDasharray="4 2" strokeWidth={1} />
             )}
             {detail.resistance && (
               <ReferenceLine y={detail.resistance} stroke="#22c55e" strokeDasharray="4 2" strokeWidth={1} />
             )}
+            <Line
+              type="linear"
+              dataKey="close"
+              stroke="#60a5fa"
+              strokeWidth={1.5}
+              dot={{ r: 2, fill: '#60a5fa', strokeWidth: 0 }}
+              activeDot={{ r: 4 }}
+              name="Close"
+              connectNulls
+            />
             <Line type="monotone" dataKey="sma20" stroke="#f59e0b" dot={false} strokeWidth={1.5} name="20DMA" connectNulls />
             <Line type="monotone" dataKey="sma50" stroke="#a855f7" dot={false} strokeWidth={1.5} name="50DMA" connectNulls />
-          </ComposedChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
 
@@ -229,43 +237,44 @@ export default function CandidateDetail() {
         )}
       </div>
 
-      {/* News + LLM classification */}
+      {/* What's moving the stock */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">News & LLM Classification</h2>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">What's moving the stock</h2>
           <button
             onClick={() => { setClassifying(true); triggerNewsClassify().finally(() => setClassifying(false)) }}
             disabled={classifying}
             className="text-xs text-blue-400 hover:text-blue-300 disabled:text-gray-600 border border-blue-900 hover:border-blue-700 rounded px-2 py-1"
           >
-            {classifying ? 'Classifying…' : 'Classify now'}
+            {classifying ? 'Analyzing…' : 'Re-analyze'}
           </button>
         </div>
 
-        {/* Verdict callout */}
         {detail.news_verdict ? (
-          <VerdictCallout
-            verdict={detail.news_verdict}
-            confidence={detail.news_confidence}
-            summary={detail.llm_summary}
-          />
+          detail.llm_summary && detail.llm_summary.trim() ? (
+            <p className="text-sm text-gray-200 leading-relaxed">{detail.llm_summary}</p>
+          ) : (
+            <p className="text-sm text-gray-500 italic">No clear news catalyst for the recent move — likely sector/macro or technical.</p>
+          )
         ) : (
-          <p className="text-gray-600 text-sm mb-3">No classification available — run the 18:00 IST job or trigger manually.</p>
+          <p className="text-gray-600 text-sm">Not analyzed yet — run the 18:00 IST job or click Re-analyze.</p>
         )}
 
-        {/* Per-headline list */}
         {(detail.news_headlines ?? []).length > 0 && (
-          <div className="mt-3 space-y-2">
-            {(detail.news_headlines ?? []).map(h => (
-              <div key={h.idx} className="flex gap-3 text-sm">
-                <HeadlineBadge cls={h.classification} />
-                <div className="min-w-0">
-                  <p className="text-gray-200 leading-snug">{h.headline}</p>
-                  <p className="text-gray-500 text-xs mt-0.5 italic">{h.reason}</p>
+          <details className="mt-3">
+            <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">Show source headlines ({detail.news_headlines!.length})</summary>
+            <div className="mt-2 space-y-2">
+              {(detail.news_headlines ?? []).map(h => (
+                <div key={h.idx} className="flex gap-3 text-sm">
+                  <HeadlineBadge cls={h.classification} />
+                  <div className="min-w-0">
+                    <p className="text-gray-300 leading-snug">{h.headline}</p>
+                    <p className="text-gray-500 text-xs mt-0.5 italic">{h.reason}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </details>
         )}
       </div>
 
