@@ -6,7 +6,7 @@ import Badge from '../components/Badge'
 import PlaceOrderModal from '../components/PlaceOrderModal'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, CartesianGrid, ReferenceLine,
+  ResponsiveContainer, CartesianGrid, ReferenceLine, ReferenceArea,
 } from 'recharts'
 
 const VERDICT_STYLES: Record<string, { border: string; bg: string; text: string; label: string }> = {
@@ -73,6 +73,10 @@ export default function CandidateDetail() {
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [classifying, setClassifying] = useState(false)
+  const [zoomLeft, setZoomLeft] = useState<string | null>(null)
+  const [zoomRight, setZoomRight] = useState<string | null>(null)
+  const [zoomDomain, setZoomDomain] = useState<[string, string] | null>(null)
+  const [isSelecting, setIsSelecting] = useState(false)
 
   useEffect(() => {
     if (!symbol) return
@@ -103,26 +107,60 @@ export default function CandidateDetail() {
     sma50: sma(closes, 50, i),
   }))
 
-  const signals = [
-    { label: 'LTP', value: fmt(detail.ltp) },
-    { label: 'Prev Close', value: fmt(detail.prev_close) },
-    { label: 'Change today', value: pctFmt(detail.pct_change_today), color: (detail.pct_change_today ?? 0) >= 0 ? 'text-green-400' : 'text-red-400' },
-    { label: 'Pullback Score', value: detail.score.toFixed(1), color: 'text-blue-300' },
-    { label: 'Shubham Score', value: detail.shubham_score != null ? detail.shubham_score.toFixed(1) : '–', color: 'text-purple-300' },
-    { label: 'RSI 14', value: detail.rsi_14?.toFixed(1) ?? '–', color: (detail.rsi_14 ?? 50) < 35 ? 'text-orange-400' : undefined },
-    { label: '% Below 20D High', value: `${detail.pct_below_20d_high?.toFixed(2) ?? '–'}%`, color: 'text-orange-300' },
-    { label: '% Below 50D High', value: `${detail.pct_below_50d_high?.toFixed(2) ?? '–'}%` },
-    { label: 'Dist from 20DMA', value: pctFmt(detail.dist_from_20dma_pct) },
-    { label: 'Dist from 50DMA', value: pctFmt(detail.dist_from_50dma_pct) },
-    { label: 'Volume Ratio', value: detail.volume_ratio?.toFixed(2) ?? '–', color: (detail.volume_ratio ?? 0) >= 1.5 ? 'text-yellow-400' : undefined },
-    { label: 'Support (S1)', value: fmt(detail.support) },
-    { label: 'Support % away', value: pctFmt(detail.support_pct_away), color: 'text-red-300' },
-    { label: 'Resistance (R1)', value: fmt(detail.resistance) },
-    { label: 'Resistance % away', value: pctFmt(detail.resistance_pct_away), color: 'text-green-300' },
-    { label: '30D Swing Low', value: fmt(detail.swing_low_30d) },
-    { label: '30D Swing High', value: fmt(detail.swing_high_30d) },
-    { label: 'Green After Red', value: detail.green_after_red ? 'Yes ✓' : 'No', color: detail.green_after_red ? 'text-green-400' : undefined },
-    { label: 'Scan Date', value: detail.scan_date },
+  const visibleData = zoomDomain
+    ? chartData.filter(d => d.date >= zoomDomain[0] && d.date <= zoomDomain[1])
+    : chartData
+
+  const lastSma20 = [...chartData].reverse().find(d => d.sma20 != null)?.sma20 ?? null
+  const lastSma50 = [...chartData].reverse().find(d => d.sma50 != null)?.sma50 ?? null
+
+  const signalGroups = [
+    {
+      title: 'Price',
+      items: [
+        { label: 'LTP', value: fmt(detail.ltp) },
+        { label: 'Prev Close', value: fmt(detail.prev_close) },
+        { label: 'Change today', value: pctFmt(detail.pct_change_today), color: (detail.pct_change_today ?? 0) >= 0 ? 'text-green-400' : 'text-red-400' },
+      ],
+    },
+    {
+      title: 'Scores',
+      items: [
+        { label: 'Pullback Score', value: detail.score.toFixed(1), color: 'text-blue-300' },
+        { label: 'Shubham Score', value: detail.shubham_score != null ? detail.shubham_score.toFixed(1) : '–', color: 'text-purple-300' },
+        { label: 'RSI 14', value: detail.rsi_14?.toFixed(1) ?? '–', color: (detail.rsi_14 ?? 50) < 35 ? 'text-orange-400' : undefined },
+      ],
+    },
+    {
+      title: 'vs Highs & MAs',
+      cols: 2 as const,
+      items: [
+        { label: '% Below 20D High', value: `${detail.pct_below_20d_high?.toFixed(2) ?? '–'}%`, color: 'text-orange-300' },
+        { label: '% Below 50D High', value: `${detail.pct_below_50d_high?.toFixed(2) ?? '–'}%` },
+        { label: '20DMA', value: fmt(lastSma20) },
+        { label: 'Dist from 20DMA', value: pctFmt(detail.dist_from_20dma_pct) },
+        { label: '50DMA', value: fmt(lastSma50) },
+        { label: 'Dist from 50DMA', value: pctFmt(detail.dist_from_50dma_pct) },
+      ],
+    },
+    {
+      title: 'Support / Resistance',
+      cols: 2 as const,
+      items: [
+        { label: 'Support (S1)', value: fmt(detail.support) },
+        { label: 'Support % away', value: pctFmt(detail.support_pct_away), color: 'text-red-300' },
+        { label: 'Resistance (R1)', value: fmt(detail.resistance) },
+        { label: 'Resistance % away', value: pctFmt(detail.resistance_pct_away), color: 'text-green-300' },
+      ],
+    },
+    {
+      title: 'Activity',
+      items: [
+        { label: 'Volume Ratio', value: detail.volume_ratio?.toFixed(2) ?? '–', color: (detail.volume_ratio ?? 0) >= 1.5 ? 'text-yellow-400' : undefined },
+        { label: 'Green After Red', value: detail.green_after_red ? 'Yes ✓' : 'No', color: detail.green_after_red ? 'text-green-400' : undefined },
+        { label: 'Scan Date', value: detail.scan_date },
+      ],
+    },
   ]
 
   return (
@@ -140,14 +178,45 @@ export default function CandidateDetail() {
 
       {/* 90-day chart */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-4">
-        <h2 className="text-sm text-gray-400 mb-1">90-day Close · <span className="text-amber-400">── 20DMA</span> · <span className="text-purple-400">── 50DMA</span></h2>
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-sm text-gray-400">90-day Close</h2>
+          {zoomDomain && (
+            <button onClick={() => setZoomDomain(null)} className="text-xs text-blue-400 hover:text-blue-300">
+              Reset zoom
+            </button>
+          )}
+        </div>
         {detail.support && (
           <p className="text-xs text-gray-600 mb-3">
             S1 ₹{detail.support.toFixed(2)} · R1 ₹{detail.resistance?.toFixed(2) ?? '–'}
           </p>
         )}
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <LineChart
+            data={visibleData}
+            margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+            style={{ cursor: isSelecting ? 'crosshair' : 'default' }}
+            onMouseDown={e => {
+              const label = e?.activeLabel as string | undefined
+              if (!label) return
+              setZoomLeft(label)
+              setIsSelecting(true)
+            }}
+            onMouseMove={e => {
+              if (!isSelecting) return
+              const label = e?.activeLabel as string | undefined
+              if (label) setZoomRight(label)
+            }}
+            onMouseUp={() => {
+              if (isSelecting && zoomLeft && zoomRight && zoomLeft !== zoomRight) {
+                const [a, b] = [zoomLeft, zoomRight].sort()
+                setZoomDomain([a, b])
+              }
+              setIsSelecting(false)
+              setZoomLeft(null)
+              setZoomRight(null)
+            }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
             <XAxis
               dataKey="date"
@@ -179,18 +248,30 @@ export default function CandidateDetail() {
             />
             <Line type="monotone" dataKey="sma20" stroke="#f59e0b" dot={false} strokeWidth={1.5} name="20DMA" connectNulls />
             <Line type="monotone" dataKey="sma50" stroke="#a855f7" dot={false} strokeWidth={1.5} name="50DMA" connectNulls />
+            {isSelecting && zoomLeft && zoomRight && (
+              <ReferenceArea x1={zoomLeft} x2={zoomRight} fill="#60a5fa" fillOpacity={0.1} strokeOpacity={0.3} />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Full signals table */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-4">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">All Signals</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
-          {signals.map(({ label, value, color }) => (
-            <div key={label}>
-              <div className="text-xs text-gray-500">{label}</div>
-              <div className={`text-sm font-mono ${color ?? 'text-gray-200'}`}>{value}</div>
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">All Signals</h2>
+        <div className="space-y-4">
+          {signalGroups.map(group => (
+            <div key={group.title}>
+              <div className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest mb-2 border-b border-gray-800 pb-1">
+                {group.title}
+              </div>
+              <div className={`grid gap-x-6 gap-y-2 ${group.cols === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+                {group.items.map(({ label, value, color }) => (
+                  <div key={label}>
+                    <div className="text-xs text-gray-500">{label}</div>
+                    <div className={`text-sm font-mono ${color ?? 'text-gray-200'}`}>{value}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

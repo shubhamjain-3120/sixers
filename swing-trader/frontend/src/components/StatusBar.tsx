@@ -36,7 +36,7 @@ export default function StatusBar() {
   return (
     <div className="flex flex-wrap items-center gap-4 bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-sm mb-4">
       <span className="text-green-400">
-        🟢 Kite connected — expires {auth?.expires_at ? format(new Date(auth.expires_at), 'HH:mm') : '…'}
+        🟢 Kite connected
       </span>
       {stats && (
         <>

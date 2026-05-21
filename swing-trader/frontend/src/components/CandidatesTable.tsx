@@ -72,7 +72,7 @@ export default function CandidatesTable() {
         <p className="text-gray-600 text-sm">No candidates above threshold. Run a scan or check back after 15:45 IST.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-max text-sm">
             <thead>
               <tr className="border-b border-gray-700 text-gray-500 text-xs uppercase tracking-wider">
                 <th className="py-2 pl-3 pr-4 text-center">Scrip</th>
@@ -84,7 +84,7 @@ export default function CandidatesTable() {
                 <th className="py-2 pr-4 text-center">Resistance</th>
                 <th className="py-2 pr-4 text-center">Pullback</th>
                 <th className="py-2 pr-4 text-center">Shubham</th>
-                <th className="py-2 pr-3 text-center"></th>
+                <th className="py-2 pl-2 pr-4 text-center min-w-[70px]"></th>
               </tr>
             </thead>
             <tbody>

@@ -13,7 +13,7 @@ function fmt(n: number | null | undefined, dec = 2, prefix = '₹') {
   return `${prefix}${n.toFixed(dec)}`
 }
 
-function dmaCell(ltp: number, distPct: number | null | undefined) {
+function dmaCell(ltp: number | null, distPct: number | null | undefined) {
   if (distPct == null) return <span className="text-gray-600">–</span>
   const dma = ltp / (1 + distPct / 100)
   const sign = distPct >= 0 ? '+' : ''
@@ -73,7 +73,7 @@ export default function CandidateRow({ candidate, onOrderPlaced }: Props) {
         <td className="py-2.5 pr-4 font-mono text-center text-purple-300 font-bold">
           {candidate.shubham_score != null ? candidate.shubham_score.toFixed(0) : '–'}
         </td>
-        <td className="py-2.5 pr-3 text-center">
+        <td className="py-2.5 pl-2 pr-4 text-center">
           <button
             onClick={e => { e.stopPropagation(); setShowModal(true) }}
             disabled={!canTrade}
