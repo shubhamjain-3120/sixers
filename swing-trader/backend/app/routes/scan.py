@@ -74,24 +74,7 @@ def get_candidates(
         .all()
     }
 
-    from sqlalchemy import text
-    placeholders = ", ".join(f"'{sym}'" for sym in symbols)
-    ohlcv_raw = db.execute(
-        text(
-            f"""
-            SELECT symbol, close, date FROM (
-                SELECT symbol, close, date,
-                       ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC) AS rn
-                FROM ohlcv_daily
-                WHERE symbol IN ({placeholders})
-            ) t WHERE rn <= 30
-            ORDER BY symbol, date ASC
-            """
-        )
-    ).fetchall()
     sparklines: dict[str, list] = {}
-    for row in ohlcv_raw:
-        sparklines.setdefault(row.symbol, []).append(row.close)
 
     result = []
     for s in scans:
@@ -136,6 +119,7 @@ def get_candidates(
                 resistance_pct_away=resistance_pct,
                 rsi_14=s.rsi_14,
                 score=s.score,
+                shubham_score=s.shubham_score,
                 dist_from_20dma_pct=s.dist_from_20dma_pct,
                 dist_from_50dma_pct=s.dist_from_50dma_pct,
                 sparkline_data=sparkline,
@@ -276,6 +260,7 @@ def get_candidate_detail(symbol: str, db: Session = Depends(get_db)):
         resistance_pct_away=resistance_pct,
         rsi_14=latest_scan.rsi_14,
         score=latest_scan.score,
+        shubham_score=latest_scan.shubham_score,
         green_after_red=latest_scan.green_after_red,
         sparkline_data=sparkline,
         badge=badge,
