@@ -14,7 +14,7 @@ function fmt(n: number | null | undefined, dec = 2, prefix = '₹') {
 }
 
 function dmaCell(ltp: number | null, distPct: number | null | undefined) {
-  if (distPct == null) return <span className="text-gray-600">–</span>
+  if (ltp == null || distPct == null) return <span className="text-gray-600">–</span>
   const dma = ltp / (1 + distPct / 100)
   const sign = distPct >= 0 ? '+' : ''
   const color = distPct >= 0 ? 'text-green-400' : 'text-red-400'
