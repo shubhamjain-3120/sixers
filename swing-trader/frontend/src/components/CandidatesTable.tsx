@@ -6,7 +6,7 @@ import CandidateRowComponent from './CandidateRow'
 export default function CandidatesTable() {
   const [candidates, setCandidates] = useState<CandidateRow[]>([])
   const [showRed, setShowRed] = useState(false)
-  const [sortBy, setSortBy] = useState<'score' | 'shubham_score' | 'pct_change'>('score')
+  const [sortBy, setSortBy] = useState<'score' | 'shubham_score' | 'pct_change'>('shubham_score')
   const [loading, setLoading] = useState(true)
   const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
