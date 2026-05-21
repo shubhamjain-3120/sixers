@@ -1,0 +1,56 @@
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+
+class TradeEntryRequest(BaseModel):
+    symbol: str
+
+
+class TradeEntryResponse(BaseModel):
+    trade_id: int
+    fill_price: float
+    qty: int
+    target_price: float
+    sl_price: float
+    gtt_id: int
+    status: str
+
+
+class OpenPositionRow(BaseModel):
+    id: int
+    symbol: str
+    segment: Optional[str] = None
+    entry_date: datetime
+    entry_price: float
+    ltp: Optional[float] = None
+    pnl_pct: Optional[float] = None
+    pnl_inr: Optional[float] = None
+    initial_target_price: Optional[float] = None
+    current_sl_price: Optional[float] = None
+    pct_to_target: Optional[float] = None   # (target - ltp) / ltp * 100
+    pct_to_sl: Optional[float] = None       # (sl - ltp) / ltp * 100, negative
+    trailing_state: str
+    days_held: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ClosedTradeRow(BaseModel):
+    id: int
+    symbol: str
+    entry_date: datetime
+    exit_date: Optional[datetime] = None
+    entry_price: float
+    exit_price: Optional[float] = None
+    qty: int
+    pnl_inr: Optional[float] = None
+    pnl_pct: Optional[float] = None
+    exit_reason: Optional[str] = None
+    days_held: Optional[int] = None
+    badge_at_entry: Optional[str] = None
+    llm_verdict_at_entry: Optional[str] = None
+
+    class Config:
+        from_attributes = True

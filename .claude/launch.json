@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "swing-trader-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/shubhamjain/sixers/swing-trader/frontend",
+      "port": 5174
+    }
+  ]
+}
