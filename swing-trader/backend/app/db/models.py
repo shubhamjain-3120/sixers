@@ -83,6 +83,7 @@ class DailyScan(Base):
     pivot_resistance = Column(Float)
     green_after_red = Column(Boolean, default=False)
     score = Column(Float, nullable=False)
+    shubham_score = Column(Float)
     __table_args__ = (UniqueConstraint("symbol", "scan_date"),)
 
 
@@ -142,6 +143,8 @@ class Trade(Base):
     segment = Column(String)
     badge_at_entry = Column(String)
     llm_verdict_at_entry = Column(String)
+    pullback_score_at_entry = Column(Float)
+    shubham_score_at_entry = Column(Float)
     entry_date = Column(DateTime, nullable=False)
     entry_price = Column(Float, nullable=False)
     qty = Column(Integer, nullable=False)

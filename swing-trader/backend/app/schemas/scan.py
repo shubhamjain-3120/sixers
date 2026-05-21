@@ -18,6 +18,7 @@ class CandidateRow(BaseModel):
     resistance_pct_away: Optional[float] = None
     rsi_14: Optional[float] = None
     score: float
+    shubham_score: Optional[float] = None
     sparkline_data: List[float] = []
     badge: str
     llm_summary: Optional[str] = None

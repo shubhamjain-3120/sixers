@@ -63,6 +63,8 @@ class ClosedTradeRow(BaseModel):
     days_held: Optional[int] = None
     badge_at_entry: Optional[str] = None
     llm_verdict_at_entry: Optional[str] = None
+    pullback_score_at_entry: Optional[float] = None
+    shubham_score_at_entry: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -89,6 +91,8 @@ class TradeDetail(BaseModel):
     days_held: Optional[int] = None
     badge_at_entry: Optional[str] = None
     llm_verdict_at_entry: Optional[str] = None
+    pullback_score_at_entry: Optional[float] = None
+    shubham_score_at_entry: Optional[float] = None
     notes: Optional[str] = None
     ohlcv: List[OhlcvBar] = []
 

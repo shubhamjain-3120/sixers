@@ -27,6 +27,9 @@ def run_migrations():
     new_columns = [
         ("config", "telegram_bot_token", "TEXT", "''"),
         ("config", "telegram_chat_id", "TEXT", "''"),
+        ("daily_scans", "shubham_score", "REAL", "NULL"),
+        ("trades", "pullback_score_at_entry", "REAL", "NULL"),
+        ("trades", "shubham_score_at_entry", "REAL", "NULL"),
     ]
     with engine.connect() as conn:
         for table, col, col_type, default in new_columns:

@@ -6,7 +6,7 @@ import CandidateRowComponent from './CandidateRow'
 export default function CandidatesTable() {
   const [candidates, setCandidates] = useState<CandidateRow[]>([])
   const [showRed, setShowRed] = useState(false)
-  const [sortBy, setSortBy] = useState<'score' | 'pct_change'>('score')
+  const [sortBy, setSortBy] = useState<'score' | 'shubham_score' | 'pct_change'>('score')
   const [loading, setLoading] = useState(true)
   const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
@@ -29,6 +29,7 @@ export default function CandidatesTable() {
 
   const sorted = [...candidates].sort((a, b) => {
     if (sortBy === 'score') return b.score - a.score
+    if (sortBy === 'shubham_score') return (b.shubham_score ?? -1) - (a.shubham_score ?? -1)
     return (b.pct_change_today ?? 0) - (a.pct_change_today ?? 0)
   })
 
@@ -75,7 +76,8 @@ export default function CandidatesTable() {
             onChange={e => setSortBy(e.target.value as any)}
             className="bg-gray-800 border border-gray-700 rounded text-xs text-gray-300 px-2 py-1"
           >
-            <option value="score">Sort: Score</option>
+            <option value="score">Sort: Pullback</option>
+            <option value="shubham_score">Sort: Shubham</option>
             <option value="pct_change">Sort: % Change</option>
           </select>
         </div>
@@ -86,10 +88,30 @@ export default function CandidatesTable() {
       ) : sorted.length === 0 ? (
         <p className="text-gray-600 text-sm">No candidates above threshold. Run a scan or check back after 15:45 IST.</p>
       ) : (
-        <div className="space-y-2">
-          {sorted.map(c => (
-            <CandidateRowComponent key={c.symbol} candidate={c} onOrderPlaced={load} />
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-700 text-gray-500 text-xs uppercase tracking-wider">
+                <th className="py-2 pl-3 pr-2 text-left w-8"></th>
+                <th className="py-2 pr-4 text-left">Scrip</th>
+                <th className="py-2 pr-4 text-right">LTP</th>
+                <th className="py-2 pr-4 text-right">20DH</th>
+                <th className="py-2 pr-4 text-right">20DMA</th>
+                <th className="py-2 pr-4 text-right">50DMA</th>
+                <th className="py-2 pr-4 text-right">R</th>
+                <th className="py-2 pr-4 text-right">S</th>
+                <th className="py-2 pr-4 text-right">RSI</th>
+                <th className="py-2 pr-4 text-right">Pullback</th>
+                <th className="py-2 pr-4 text-right">Shubham</th>
+                <th className="py-2 pr-3 text-right"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map(c => (
+                <CandidateRowComponent key={c.symbol} candidate={c} onOrderPlaced={load} />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>

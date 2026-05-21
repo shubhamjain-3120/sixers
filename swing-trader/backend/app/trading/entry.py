@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.db.models import Trade, Config, Instrument
+from app.db.models import Trade, Config, Instrument, DailyScan
 from app.kite.client import get_kite_client
 from app.kite.orders import log_order, wait_for_fill
 from app.kite.gtt import place_oco_gtt
@@ -76,12 +76,24 @@ def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_ver
     target_price = round(fill_price * (1 + cfg.target_pct / 100), 1)
     sl_price = round(fill_price * (1 - cfg.stop_loss_pct / 100), 1)
 
+    # Capture both scores from the most recent scan for journal/backtest analysis.
+    latest_scan = (
+        db.query(DailyScan)
+        .filter(DailyScan.symbol == symbol)
+        .order_by(DailyScan.scan_date.desc())
+        .first()
+    )
+    pullback_score = latest_scan.score if latest_scan else None
+    shubham_score = latest_scan.shubham_score if latest_scan else None
+
     # Create trade row
     trade = Trade(
         symbol=symbol,
         segment=inst.segment if inst else "NIFTY50_STOCK",
         badge_at_entry=badge,
         llm_verdict_at_entry=llm_verdict,
+        pullback_score_at_entry=pullback_score,
+        shubham_score_at_entry=shubham_score,
         entry_date=datetime.utcnow(),
         entry_price=fill_price,
         qty=filled_qty,

@@ -32,6 +32,7 @@ export interface CandidateRow {
   resistance_pct_away: number | null
   rsi_14: number | null
   score: number
+  shubham_score: number | null
   dist_from_20dma_pct: number | null
   dist_from_50dma_pct: number | null
   sparkline_data: number[]
@@ -71,6 +72,8 @@ export interface ClosedTrade {
   days_held: number | null
   badge_at_entry: string | null
   llm_verdict_at_entry: string | null
+  pullback_score_at_entry: number | null
+  shubham_score_at_entry: number | null
 }
 
 export interface StatsSummary {

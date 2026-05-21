@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react'
-import { getConfig, updateConfig, getKiteLoginUrl, refreshUniverse, testTelegram, triggerScan } from '../api/client'
-import type { Config } from '../types'
+import { getConfig, updateConfig, getKiteLoginUrl, refreshUniverse, testTelegram, triggerScan, getScanStatus } from '../api/client'
+import type { Config, ScanStatus } from '../types'
 
 export default function Settings() {
   const [cfg, setCfg] = useState<Config | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [msg, setMsg] = useState('')
+  const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null)
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
-  useEffect(() => { getConfig().then(setCfg).catch(() => {}) }, [])
+  useEffect(() => {
+    getConfig().then(setCfg).catch(() => {})
+    getScanStatus().then(s => { setScanStatus(s); setLastRefresh(new Date()) }).catch(() => {})
+  }, [])
 
   const handleChange = (key: keyof Config, value: string) => {
     if (!cfg) return
@@ -106,10 +111,18 @@ export default function Settings() {
 
       {/* Utility actions */}
       <Section title="Actions">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 mb-3">
           <button onClick={handleRefreshUniverse} className="btn-secondary">Refresh Universe</button>
           <button onClick={handleRunScan} className="btn-secondary">Run Scan</button>
           <button onClick={handleTestTelegram} className="btn-secondary">Test Telegram</button>
+        </div>
+        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+          {scanStatus?.last_scan_at && (
+            <span>Last scan: <span className="text-gray-300">{scanStatus.last_scan_at}</span></span>
+          )}
+          {lastRefresh && (
+            <span>Last refresh: <span className="text-gray-300">{lastRefresh.toLocaleTimeString()}</span></span>
+          )}
         </div>
       </Section>
     </div>

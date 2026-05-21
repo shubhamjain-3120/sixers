@@ -101,6 +101,8 @@ def get_trade_detail(trade_id: int, db: Session = Depends(get_db)):
         days_held=trade.days_held,
         badge_at_entry=trade.badge_at_entry,
         llm_verdict_at_entry=trade.llm_verdict_at_entry,
+        pullback_score_at_entry=trade.pullback_score_at_entry,
+        shubham_score_at_entry=trade.shubham_score_at_entry,
         notes=trade.notes,
         ohlcv=[OhlcvBar(date=b.date, open=b.open, high=b.high, low=b.low, close=b.close, volume=b.volume) for b in bars],
     )

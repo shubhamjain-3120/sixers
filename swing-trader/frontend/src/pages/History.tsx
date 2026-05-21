@@ -99,7 +99,7 @@ export default function History() {
           <thead className="bg-gray-900 text-gray-400 text-xs uppercase">
             <tr>
               <th className="px-3 py-2 w-6" />
-              {['Symbol', 'Entry', 'Exit', 'Entry ₹', 'Exit ₹', 'P&L%', 'P&L ₹', 'Days', 'Reason', 'Badge'].map(h => (
+              {['Symbol', 'Entry', 'Exit', 'Entry ₹', 'Exit ₹', 'P&L%', 'P&L ₹', 'Days', 'Reason', 'Badge', 'Pull', 'Shub'].map(h => (
                 <th key={h} className="px-3 py-2 text-left">{h}</th>
               ))}
             </tr>
@@ -138,10 +138,16 @@ export default function History() {
                         </span>
                       )}
                     </td>
+                    <td className="px-3 py-2 font-mono text-blue-300">
+                      {t.pullback_score_at_entry != null ? t.pullback_score_at_entry.toFixed(0) : '–'}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-purple-300">
+                      {t.shubham_score_at_entry != null ? t.shubham_score_at_entry.toFixed(0) : '–'}
+                    </td>
                   </tr>
                   {isExpanded && (
                     <tr key={`${t.id}-detail`} className="border-t border-gray-800 bg-gray-950">
-                      <td colSpan={11} className="p-4">
+                      <td colSpan={13} className="p-4">
                         {detailLoading && <p className="text-gray-500 text-sm">Loading...</p>}
                         {detail && detail.id === t.id && <TradeDetailPanel detail={detail} />}
                       </td>

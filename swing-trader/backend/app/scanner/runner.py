@@ -7,7 +7,7 @@ from app.db.session import SessionLocal
 from app.db.models import Instrument, Blacklist, OhlcvDaily, DailyScan, Config
 from app.kite.client import get_kite_client
 from app.scanner.signals import compute_signals
-from app.scanner.scorer import compute_score
+from app.scanner.scorer import compute_score, compute_shubham_score
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +98,7 @@ def _do_scan(db: Session):
         try:
             signals = compute_signals(closes, highs, lows, volumes)
             score = compute_score(signals)
+            shubham_score = compute_shubham_score(signals)
         except Exception as e:
             logger.error(f"Signal compute failed for {inst.symbol}: {e}")
             continue
@@ -126,6 +127,7 @@ def _do_scan(db: Session):
             pivot_resistance=signals.pivot_resistance,
             green_after_red=signals.green_after_red,
             score=score,
+            shubham_score=shubham_score,
         )
 
         if existing_scan:
