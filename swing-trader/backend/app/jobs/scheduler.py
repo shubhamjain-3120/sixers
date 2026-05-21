@@ -197,12 +197,10 @@ def create_scheduler() -> BackgroundScheduler:
     sched.add_job(job_morning_sync, CronTrigger(day_of_week="mon-fri", hour=9, minute=0, timezone=IST), id="morning_sync")
     # Candidate re-validation — 09:00 IST trading days
     sched.add_job(job_revalidate_candidates, CronTrigger(day_of_week="mon-fri", hour=9, minute=2, timezone=IST), id="revalidate")
-    # Position cycle — every 15 min 09:15–15:30
-    sched.add_job(
-        job_position_cycle,
-        CronTrigger(day_of_week="mon-fri", hour="9-15", minute="15,30,45,0", timezone=IST),
-        id="position_cycle",
-    )
+    # Position cycle — every 15 min 09:15–15:30 (three ranges to stay within bounds)
+    sched.add_job(job_position_cycle, CronTrigger(day_of_week="mon-fri", hour=9, minute="15,30,45", timezone=IST), id="position_cycle_9")
+    sched.add_job(job_position_cycle, CronTrigger(day_of_week="mon-fri", hour="10-14", minute="0,15,30,45", timezone=IST), id="position_cycle_10_14")
+    sched.add_job(job_position_cycle, CronTrigger(day_of_week="mon-fri", hour=15, minute="0,15,30", timezone=IST), id="position_cycle_15")
     # Time-stop — 15:00 IST
     sched.add_job(job_time_stop, CronTrigger(day_of_week="mon-fri", hour=15, minute=0, timezone=IST), id="time_stop")
     # Daily scanner — 15:45 IST

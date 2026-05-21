@@ -49,6 +49,7 @@ def place_oco_gtt(
                 "price": round(target_price, 1),
             },
         ],
+        meta={"tag": gtt_tag},
     )
     trigger_id = resp["trigger_id"]
     log_order(db, trade_id, "PLACE_GTT", "placed", kite_gtt_id=trigger_id)
@@ -83,6 +84,7 @@ def place_single_trail_gtt(
                 "price": _sl_order_price(sl_price),
             }
         ],
+        meta={"tag": gtt_tag},
     )
     trigger_id = resp["trigger_id"]
     log_order(db, trade_id, "PLACE_GTT", "trail_placed", kite_gtt_id=trigger_id)

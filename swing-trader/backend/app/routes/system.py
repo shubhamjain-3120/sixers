@@ -65,6 +65,24 @@ def trigger_news_classify():
     return {"status": "classification_started"}
 
 
+@router.post("/login-reminder")
+def trigger_login_reminder():
+    """Force-send the Telegram login reminder regardless of token state. For testing."""
+    from app.telegram_bot.reminder import send_login_link
+    from app.db.session import SessionLocal
+    from app.db.models import Config
+    from app.config import settings
+    db = SessionLocal()
+    try:
+        cfg = db.query(Config).first()
+        bot_token = (cfg and cfg.telegram_bot_token) or settings.telegram_bot_token
+        chat_id = (cfg and cfg.telegram_chat_id) or settings.telegram_chat_id
+        sent = send_login_link(bot_token, chat_id)
+        return {"status": "sent" if sent else "failed_or_not_configured"}
+    finally:
+        db.close()
+
+
 @router.get("/health")
 def health():
     return {"status": "ok"}

@@ -135,3 +135,15 @@ export interface BlockDealOut {
   price: number | null
   source: string | null
 }
+
+export interface TradeDetail extends ClosedTrade {
+  segment: string | null
+  capital_deployed: number
+  initial_target_price: number | null
+  initial_sl_price: number | null
+  current_sl_price: number | null
+  high_water_mark: number | null
+  trailing_state: string | null
+  notes: string | null
+  ohlcv: OhlcvBar[]
+}

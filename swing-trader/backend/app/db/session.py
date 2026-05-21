@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.config import settings
 
@@ -15,3 +15,18 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def run_migrations():
+    """Add columns that were added after initial schema creation."""
+    new_columns = [
+        ("config", "telegram_bot_token", "TEXT DEFAULT ''"),
+        ("config", "telegram_chat_id", "TEXT DEFAULT ''"),
+    ]
+    with engine.connect() as conn:
+        for table, col, col_def in new_columns:
+            try:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_def}"))
+                conn.commit()
+            except Exception:
+                pass  # Column already exists

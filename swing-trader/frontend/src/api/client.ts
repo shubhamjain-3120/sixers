@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Config, AuthStatus, CandidateRow, CandidateDetail, OhlcvBar, BlockDealOut, OpenPosition, ClosedTrade, StatsSummary, EquityPoint, PerHeadline } from '../types'
+import type { Config, AuthStatus, CandidateRow, CandidateDetail, OhlcvBar, BlockDealOut, OpenPosition, ClosedTrade, TradeDetail, StatsSummary, EquityPoint, PerHeadline } from '../types'
 
 const api = axios.create({ baseURL: '/api' })
 
@@ -28,6 +28,7 @@ export const triggerScan = () => api.post('/scan/run').then(r => r.data)
 // Trades
 export const getOpenPositions = () => api.get<OpenPosition[]>('/trades/open').then(r => r.data)
 export const getClosedTrades = () => api.get<ClosedTrade[]>('/trades/closed').then(r => r.data)
+export const getTradeDetail = (tradeId: number) => api.get<TradeDetail>(`/trades/${tradeId}`).then(r => r.data)
 export const placeTrade = (symbol: string) => api.post('/trades', { symbol }).then(r => r.data)
 export const forceExit = (tradeId: number) => api.post(`/trades/${tradeId}/force-exit`).then(r => r.data)
 

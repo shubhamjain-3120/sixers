@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.db.session import get_db
-from app.db.models import Trade, Config, SetupClassification
-from app.schemas.trades import TradeEntryRequest, TradeEntryResponse, OpenPositionRow, ClosedTradeRow
+from app.db.models import Trade, Config, SetupClassification, OhlcvDaily
+from app.schemas.trades import TradeEntryRequest, TradeEntryResponse, OpenPositionRow, ClosedTradeRow, TradeDetail, OhlcvBar
 from typing import List
 from datetime import datetime, date
 import logging
@@ -60,6 +60,50 @@ def get_open_trades(db: Session = Depends(get_db)):
 @router.get("/api/trades/closed", response_model=List[ClosedTradeRow])
 def get_closed_trades(db: Session = Depends(get_db)):
     return db.query(Trade).filter(Trade.status == "CLOSED").order_by(desc(Trade.exit_date)).all()
+
+
+@router.get("/api/trades/{trade_id}", response_model=TradeDetail)
+def get_trade_detail(trade_id: int, db: Session = Depends(get_db)):
+    trade = db.query(Trade).filter(Trade.id == trade_id).first()
+    if not trade:
+        raise HTTPException(status_code=404, detail="trade_not_found")
+
+    # Fetch OHLCV from entry date to exit date (or today for open trades)
+    from datetime import date as date_cls
+    start = trade.entry_date.date()
+    end = trade.exit_date.date() if trade.exit_date else date_cls.today()
+
+    bars = (
+        db.query(OhlcvDaily)
+        .filter(OhlcvDaily.symbol == trade.symbol, OhlcvDaily.date >= start, OhlcvDaily.date <= end)
+        .order_by(OhlcvDaily.date)
+        .all()
+    )
+
+    return TradeDetail(
+        id=trade.id,
+        symbol=trade.symbol,
+        segment=trade.segment,
+        entry_date=trade.entry_date,
+        exit_date=trade.exit_date,
+        entry_price=trade.entry_price,
+        exit_price=trade.exit_price,
+        qty=trade.qty,
+        capital_deployed=trade.capital_deployed,
+        initial_target_price=trade.initial_target_price,
+        initial_sl_price=trade.initial_sl_price,
+        current_sl_price=trade.current_sl_price,
+        high_water_mark=trade.high_water_mark,
+        trailing_state=trade.trailing_state,
+        pnl_inr=trade.pnl_inr,
+        pnl_pct=trade.pnl_pct,
+        exit_reason=trade.exit_reason,
+        days_held=trade.days_held,
+        badge_at_entry=trade.badge_at_entry,
+        llm_verdict_at_entry=trade.llm_verdict_at_entry,
+        notes=trade.notes,
+        ohlcv=[OhlcvBar(date=b.date, open=b.open, high=b.high, low=b.low, close=b.close, volume=b.volume) for b in bars],
+    )
 
 
 @router.post("/api/trades", response_model=TradeEntryResponse)

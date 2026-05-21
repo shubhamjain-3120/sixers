@@ -15,7 +15,7 @@ def _getaddrinfo_prefer_ipv4(host, port, family=0, type=0, proto=0, flags=0):
 
 socket.getaddrinfo = _getaddrinfo_prefer_ipv4
 from fastapi.middleware.cors import CORSMiddleware
-from app.db.session import engine
+from app.db.session import engine, run_migrations
 from app.db.models import Base
 from app.jobs.scheduler import create_scheduler
 from app.routes import auth, config, universe, scan, trades, stats, system, telegram, news
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Create all tables
     Base.metadata.create_all(bind=engine)
+    run_migrations()
     logger.info("Database tables created/verified")
 
     # Start scheduler

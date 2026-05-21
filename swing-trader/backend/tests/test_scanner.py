@@ -100,7 +100,7 @@ def test_swing_low_high():
 
 def test_pivot_s1_r1_classic():
     # high=110, low=90, close=100 -> pivot=100, r1=110, s1=90
-    s1, r1 = pivot_s1_r1(110, 90, 100)
+    s1, r1 = pivot_s1_r1(110, 90, 100, 100)
     assert s1 == 90.0
     assert r1 == 110.0
 

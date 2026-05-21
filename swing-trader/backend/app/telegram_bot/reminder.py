@@ -6,9 +6,12 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
-def send_login_link() -> bool:
+def send_login_link(bot_token: str = None, chat_id: str = None) -> bool:
     """Send the login reminder. Returns True on success."""
-    if not settings.telegram_bot_token or not settings.telegram_chat_id:
+    bot_token = bot_token or settings.telegram_bot_token
+    chat_id = chat_id or settings.telegram_chat_id
+
+    if not bot_token or not chat_id:
         logger.warning("Telegram not configured; skipping login reminder")
         return False
 
@@ -19,8 +22,8 @@ def send_login_link() -> bool:
     )
     try:
         resp = requests.post(
-            f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage",
-            json={"chat_id": settings.telegram_chat_id, "text": text},
+            f"https://api.telegram.org/bot{bot_token}/sendMessage",
+            json={"chat_id": chat_id, "text": text},
             timeout=10,
         )
         if resp.ok:
@@ -34,8 +37,15 @@ def send_login_link() -> bool:
 
 
 def maybe_send_login_reminder(db) -> bool:
-    from app.db.models import KiteToken
+    from app.db.models import KiteToken, Config
+
     token = db.query(KiteToken).order_by(KiteToken.created_at.desc()).first()
     if token and token.expires_at > datetime.utcnow():
         return False  # still valid
-    return send_login_link()
+
+    # Resolve credentials: DB-stored values take priority over env vars
+    cfg = db.query(Config).first()
+    bot_token = (cfg and cfg.telegram_bot_token) or settings.telegram_bot_token
+    chat_id = (cfg and cfg.telegram_chat_id) or settings.telegram_chat_id
+
+    return send_login_link(bot_token, chat_id)

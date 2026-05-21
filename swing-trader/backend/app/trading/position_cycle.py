@@ -47,7 +47,13 @@ def run_cycle(db: Session, kite: RateLimitedKite) -> CycleReport:
         logger.error(f"GTT fetch failed in position cycle: {e}")
         return CycleReport(positions=len(positions))
 
-    # Index GTTs by their trigger_id (meta/tag not supported in this SDK version)
+    # Primary: index by meta.tag (set on every GTT we place)
+    gtt_by_tag: dict = {
+        g["meta"]["tag"]: g
+        for g in gtts
+        if g.get("meta") and g["meta"].get("tag", "").startswith("trade_")
+    }
+    # Fallback: index by numeric id for GTTs placed before tagging was added
     gtt_by_id = {g["id"]: g for g in gtts}
 
     cfg = db.query(Config).filter(Config.id == 1).first()
@@ -60,7 +66,8 @@ def run_cycle(db: Session, kite: RateLimitedKite) -> CycleReport:
             logger.warning(f"No LTP for {p.symbol}")
             continue
 
-        gtt = gtt_by_id.get(p.active_gtt_id) if p.active_gtt_id else None
+        # Tag-based lookup first; fall back to ID for legacy records
+        gtt = gtt_by_tag.get(p.gtt_tag) or (gtt_by_id.get(p.active_gtt_id) if p.active_gtt_id else None)
 
         # Exit reconciliation
         if gtt and gtt["status"] == "triggered":
@@ -87,8 +94,9 @@ def run_cycle(db: Session, kite: RateLimitedKite) -> CycleReport:
                 hw_based = p.high_water_mark * (1 - trail_dist / 100)
                 new_sl = max(lock_floor, hw_based)
 
+                gtt_id_to_delete = gtt["id"] if gtt else p.active_gtt_id
                 try:
-                    kite.delete_gtt(p.active_gtt_id)
+                    kite.delete_gtt(gtt_id_to_delete)
                 except Exception as e:
                     logger.warning(f"Delete old GTT failed: {e}")
 

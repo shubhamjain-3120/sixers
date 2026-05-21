@@ -76,11 +76,20 @@ def swing_low_high(lows: List[float], highs: List[float], window: int):
             max(slice_highs) if slice_highs else 0.0)
 
 
-def pivot_s1_r1(prev_high: float, prev_low: float, prev_close: float):
+def pivot_s1_r1(prev_high: float, prev_low: float, prev_close: float, ltp: float):
     pivot = (prev_high + prev_low + prev_close) / 3
     r1 = 2 * pivot - prev_low
+    r2 = pivot + (prev_high - prev_low)
     s1 = 2 * pivot - prev_high
-    return round(s1, 2), round(r1, 2)
+    s2 = pivot - (prev_high - prev_low)
+
+    levels = sorted([s2, s1, pivot, r1, r2])
+    above = [x for x in levels if x > ltp]
+    below = [x for x in levels if x < ltp]
+
+    resistance = min(above) if above else r2
+    support = max(below) if below else s2
+    return round(support, 2), round(resistance, 2)
 
 
 def green_after_red(closes: List[float]) -> bool:
@@ -104,7 +113,7 @@ def compute_signals(closes: List[float], highs: List[float], lows: List[float],
     d50 = dist_from_sma_pct(close_today, closes, 50)
     vol_r = volume_ratio(volumes[-1], volumes[:-1])
     sl30, sh30 = swing_low_high(lows, highs, 30)
-    s1, r1 = pivot_s1_r1(highs[-2], lows[-2], closes[-2])
+    s1, r1 = pivot_s1_r1(highs[-2], lows[-2], closes[-2], close_today)
     gar = green_after_red(closes)
 
     return SignalsBundle(

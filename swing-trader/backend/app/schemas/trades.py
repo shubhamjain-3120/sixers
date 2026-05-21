@@ -1,6 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
+from datetime import datetime, date as date_type
+
+
+class OhlcvBar(BaseModel):
+    date: date_type
+    open: Optional[float] = None
+    high: Optional[float] = None
+    low: Optional[float] = None
+    close: Optional[float] = None
+    volume: Optional[int] = None
+
+    class Config:
+        from_attributes = True
 
 
 class TradeEntryRequest(BaseModel):
@@ -51,6 +63,34 @@ class ClosedTradeRow(BaseModel):
     days_held: Optional[int] = None
     badge_at_entry: Optional[str] = None
     llm_verdict_at_entry: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TradeDetail(BaseModel):
+    id: int
+    symbol: str
+    segment: Optional[str] = None
+    entry_date: datetime
+    exit_date: Optional[datetime] = None
+    entry_price: float
+    exit_price: Optional[float] = None
+    qty: int
+    capital_deployed: float
+    initial_target_price: Optional[float] = None
+    initial_sl_price: Optional[float] = None
+    current_sl_price: Optional[float] = None
+    high_water_mark: Optional[float] = None
+    trailing_state: Optional[str] = None
+    pnl_inr: Optional[float] = None
+    pnl_pct: Optional[float] = None
+    exit_reason: Optional[str] = None
+    days_held: Optional[int] = None
+    badge_at_entry: Optional[str] = None
+    llm_verdict_at_entry: Optional[str] = None
+    notes: Optional[str] = None
+    ohlcv: List[OhlcvBar] = []
 
     class Config:
         from_attributes = True
