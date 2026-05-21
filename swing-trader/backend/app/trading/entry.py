@@ -150,6 +150,7 @@ def execute_force_exit(db: Session, trade: Trade):
         order_type="MARKET",
         product="CNC",
         validity="DAY",
+        market_protection=2,
     )
     log_order(db, trade.id, "MARKET_SELL", "placed", kite_order_id=str(order_id))
 

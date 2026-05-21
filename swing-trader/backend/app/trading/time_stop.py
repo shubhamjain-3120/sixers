@@ -56,6 +56,7 @@ def run_time_stop(db: Session, kite: RateLimitedKite):
                 order_type="MARKET",
                 product="CNC",
                 validity="DAY",
+                market_protection=2,
             )
             db.add(OrderLog(trade_id=p.id, kite_order_id=str(order_id), action="MARKET_SELL", status="placed"))
             db.commit()
