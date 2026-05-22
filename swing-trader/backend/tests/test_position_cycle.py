@@ -2,38 +2,10 @@
 import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from app.db.models import Base, Config, Trade, OrderLog
+from app.db.models import Config, Trade, OrderLog
 from app.trading.position_cycle import run_cycle, CycleReport
 from app.trading.reconcile import reconcile_exit
-
-# ── In-memory SQLite ──────────────────────────────────────────────────────────
-
-engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture(autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture
-def db():
-    s = TestingSessionLocal()
-    try:
-        yield s
-    finally:
-        s.close()
 
 
 @pytest.fixture

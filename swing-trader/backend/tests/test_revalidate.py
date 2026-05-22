@@ -6,41 +6,18 @@ are Monday-morning prices, not Friday close.
 import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from app.db.models import Base, Config, DailyScan, OhlcvDaily
+from app.db.models import Config, DailyScan, OhlcvDaily
 from app.scanner.runner import revalidate_candidates
-
-# ── In-memory SQLite ──────────────────────────────────────────────────────────
-
-engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from tests._db import TestingSessionLocal
 
 
 @pytest.fixture(autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    db.add(Config(id=1, min_score_threshold=60.0))
-    db.commit()
-    db.close()
-    yield
-    Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture
-def db():
+def _seed_config(_create_drop_tables):
     session = TestingSessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
+    session.add(Config(id=1, min_score_threshold=60.0))
+    session.commit()
+    session.close()
 
 
 def _make_scan(db, symbol: str, scan_date: date, score: float = 72.0,

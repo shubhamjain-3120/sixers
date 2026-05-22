@@ -2,38 +2,10 @@
 import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch, call
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from app.db.models import Base, Config, Instrument, Trade, KiteToken, SetupClassification, NewsClassification
+from app.db.models import Config, Instrument, Trade, KiteToken, SetupClassification, NewsClassification
 from app.trading.entry import execute_entry, execute_force_exit
 from app.kite.orders import wait_for_fill
-
-# ── In-memory SQLite ──────────────────────────────────────────────────────────
-
-engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture(autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture
-def db():
-    session = TestingSessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
 
 
 @pytest.fixture

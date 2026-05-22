@@ -2,57 +2,27 @@
 import pytest
 from datetime import datetime, date, timedelta
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from app.db.models import Base, Config, Trade, OhlcvDaily
+from app.db.models import Config, Trade, OhlcvDaily
 from app.db.session import get_db
 from app.main import app
-
-# ── In-memory SQLite ──────────────────────────────────────────────────────────
-
-engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from tests._db import TestingSessionLocal, override_get_db
 
 
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def setup_db():
-    # Install override fresh for this test, remove it after — prevents leaking
-    # into / being overwritten by other test modules that also override get_db.
+def _install_override_and_seed(_create_drop_tables):
+    # Install the get_db override fresh for each test, remove after to prevent
+    # leaking into other test modules that also override get_db.
     app.dependency_overrides[get_db] = override_get_db
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    db.add(Config(id=1, total_capital_inr=500000))
-    db.commit()
-    db.close()
-    yield
-    Base.metadata.drop_all(bind=engine)
-    app.dependency_overrides.pop(get_db, None)
-
-
-@pytest.fixture
-def db():
     session = TestingSessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
+    session.add(Config(id=1, total_capital_inr=500000))
+    session.commit()
+    session.close()
+    yield
+    app.dependency_overrides.pop(get_db, None)
 
 
 def _make_trade(db, symbol: str, pnl_pct: float, exit_reason: str,

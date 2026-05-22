@@ -2,38 +2,11 @@
 import pytest
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app.main import app
-from app.db.models import Base, KiteToken
+from app.db.models import KiteToken
 from app.db.session import get_db
-
-# ── In-memory SQLite for tests ────────────────────────────────────────────────
-# StaticPool: all sessions share a single connection, so one in-memory DB is used.
-
-engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@pytest.fixture(autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
+from tests._db import override_get_db
 
 
 @pytest.fixture()
@@ -42,15 +15,6 @@ def client():
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
     app.dependency_overrides.clear()
-
-
-@pytest.fixture()
-def db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
