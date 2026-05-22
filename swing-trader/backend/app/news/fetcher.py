@@ -3,7 +3,6 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Tuple
 from sqlalchemy.orm import Session
-from app.db.models import NewsItem
 
 logger = logging.getLogger(__name__)
 FIVE_DAYS_AGO = timedelta(days=5)
@@ -35,23 +34,7 @@ def fetch_headlines(symbol: str, company_name: str, db: Session) -> List[Tuple[s
             link = entry.get("link", "")
             if headline:
                 results.append((headline, pub, link))
-                # Persist to news_items
-                existing = (
-                    db.query(NewsItem)
-                    .filter(NewsItem.symbol == symbol, NewsItem.headline == headline)
-                    .first()
-                )
-                if not existing:
-                    db.add(NewsItem(
-                        symbol=symbol, headline=headline, url=link,
-                        source="google_news", published_at=pub,
-                    ))
     except Exception as e:
         logger.error(f"News fetch failed for {symbol}: {e}")
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
 
     return sorted(results, key=lambda x: x[1], reverse=True)[:5]

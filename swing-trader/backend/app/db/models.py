@@ -100,17 +100,6 @@ class BlockDeal(Base):
     source = Column(String)
 
 
-class NewsItem(Base):
-    __tablename__ = "news_items"
-    id = Column(Integer, primary_key=True)
-    symbol = Column(String, nullable=False, index=True)
-    headline = Column(String, nullable=False)
-    url = Column(String)
-    source = Column(String)
-    published_at = Column(DateTime, index=True)
-    fetched_at = Column(DateTime, default=datetime.utcnow)
-
-
 class NewsClassification(Base):
     __tablename__ = "news_classifications"
     id = Column(Integer, primary_key=True)
