@@ -9,19 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 def count_trading_days(start: date, end: date) -> int:
-    """Count NSE trading days between start (exclusive) and end (inclusive)."""
-    try:
-        import nsepython
-        # nsepython may not have a direct trading-day counter; fall back to weekday count
-    except Exception:
-        pass
-    # Simple weekday count (Mon-Fri) as fallback
+    """Count weekdays (Mon-Fri) between start (exclusive) and end (inclusive)."""
+    from datetime import timedelta
     count = 0
     current = start
-    from datetime import timedelta
     while current < end:
         current += timedelta(days=1)
-        if current.weekday() < 5:  # Mon=0, Fri=4
+        if current.weekday() < 5:
             count += 1
     return count
 
