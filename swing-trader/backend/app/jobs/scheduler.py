@@ -121,36 +121,20 @@ def job_revalidate_candidates():
 
 @_trading_day_job
 def job_position_cycle():
-    from app.db.session import SessionLocal
-    from app.kite.client import get_kite_client
-    from app.trading.position_cycle import run_cycle
-    db = SessionLocal()
-    try:
-        kite = get_kite_client(db)
-        if kite:
-            run_cycle(db, kite)
-    finally:
-        db.close()
+    from app.jobs.runner import run_job
+    run_job("position-cycle")
 
 
 @_trading_day_job
 def job_time_stop():
-    from app.db.session import SessionLocal
-    from app.kite.client import get_kite_client
-    from app.trading.time_stop import run_time_stop
-    db = SessionLocal()
-    try:
-        kite = get_kite_client(db)
-        if kite:
-            run_time_stop(db, kite)
-    finally:
-        db.close()
+    from app.jobs.runner import run_job
+    run_job("time-stop")
 
 
 @_trading_day_job
 def job_daily_scan():
-    from app.scanner.runner import run_daily_scan
-    run_daily_scan()
+    from app.jobs.runner import run_job
+    run_job("scan")
 
 
 @_trading_day_job
@@ -175,8 +159,8 @@ def job_deals_fetch():
 
 @_trading_day_job
 def job_news_classification():
-    from app.news.classifier import run_news_classification
-    run_news_classification()
+    from app.jobs.runner import run_job
+    run_job("news-classify")
 
 
 # ── Scheduler setup ──────────────────────────────────────────────────────────
