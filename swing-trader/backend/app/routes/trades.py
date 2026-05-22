@@ -104,6 +104,18 @@ def get_trade_detail(trade_id: int, db: Session = Depends(get_db)):
         pullback_score_at_entry=trade.pullback_score_at_entry,
         shubham_score_at_entry=trade.shubham_score_at_entry,
         notes=trade.notes,
+        ltp_at_entry=trade.ltp_at_entry,
+        rsi_at_entry=trade.rsi_at_entry,
+        pct_below_20d_high_at_entry=trade.pct_below_20d_high_at_entry,
+        pct_below_50d_high_at_entry=trade.pct_below_50d_high_at_entry,
+        dist_from_20dma_at_entry=trade.dist_from_20dma_at_entry,
+        dist_from_50dma_at_entry=trade.dist_from_50dma_at_entry,
+        volume_ratio_at_entry=trade.volume_ratio_at_entry,
+        swing_low_at_entry=trade.swing_low_at_entry,
+        swing_high_at_entry=trade.swing_high_at_entry,
+        pivot_support_at_entry=trade.pivot_support_at_entry,
+        pivot_resistance_at_entry=trade.pivot_resistance_at_entry,
+        green_after_red_at_entry=trade.green_after_red_at_entry,
         ohlcv=[OhlcvBar(date=b.date, open=b.open, high=b.high, low=b.low, close=b.close, volume=b.volume) for b in bars],
     )
 

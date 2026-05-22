@@ -3,14 +3,18 @@ import { getAuthStatus, getStatsSummary, getKiteLoginUrl } from '../api/client'
 import type { AuthStatus, StatsSummary } from '../types'
 import { format } from 'date-fns'
 
-export default function StatusBar() {
+interface Props {
+  refreshKey?: number
+}
+
+export default function StatusBar({ refreshKey = 0 }: Props) {
   const [auth, setAuth] = useState<AuthStatus | null>(null)
   const [stats, setStats] = useState<StatsSummary | null>(null)
 
   useEffect(() => {
     getAuthStatus().then(setAuth).catch(() => {})
     getStatsSummary().then(setStats).catch(() => {})
-  }, [])
+  }, [refreshKey])
 
   const handleLogin = async () => {
     try {

@@ -18,7 +18,7 @@ def get_summary(db: Session = Depends(get_db)):
     total_capital = cfg.total_capital_inr if cfg else 0
 
     open_trades = db.query(Trade).filter(Trade.status == "OPEN").all()
-    capital_deployed = sum(t.capital_deployed for t in open_trades)
+    capital_deployed = sum(t.entry_price * t.qty for t in open_trades)
     capital_available = max(0, total_capital - capital_deployed)
 
     closed_trades = db.query(Trade).filter(Trade.status == "CLOSED").all()

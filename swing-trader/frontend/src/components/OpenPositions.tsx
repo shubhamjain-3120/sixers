@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { getOpenPositions, forceExit } from '../api/client'
 import type { OpenPosition } from '../types'
+import PositionDetailModal from './PositionDetailModal'
 
 function pctColor(v: number | null) {
   if (v == null) return 'text-gray-400'
@@ -12,9 +13,10 @@ function fmtPct(v: number | null, plus = false) {
   return `${plus && v >= 0 ? '+' : ''}${v.toFixed(2)}%`
 }
 
-export default function OpenPositions() {
+export default function OpenPositions({ onTradeChange }: { onTradeChange?: () => void }) {
   const [positions, setPositions] = useState<OpenPosition[]>([])
   const [loading, setLoading] = useState(false)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -36,6 +38,7 @@ export default function OpenPositions() {
     try {
       await forceExit(id)
       load()
+      onTradeChange?.()
     } catch (e: any) {
       alert(`Force exit failed: ${e?.response?.data?.detail || e.message}`)
     }
@@ -45,6 +48,9 @@ export default function OpenPositions() {
 
   return (
     <section className="mb-6">
+      {selectedId !== null && (
+        <PositionDetailModal tradeId={selectedId} onClose={() => setSelectedId(null)} />
+      )}
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
           Open Positions ({positions.length})
@@ -68,7 +74,11 @@ export default function OpenPositions() {
           </thead>
           <tbody>
             {positions.map(p => (
-              <tr key={p.id} className="border-t border-gray-800 hover:bg-gray-900/50">
+              <tr
+                key={p.id}
+                className="border-t border-gray-800 hover:bg-gray-900/50 cursor-pointer"
+                onClick={() => setSelectedId(p.id)}
+              >
                 <td className="px-3 py-2 font-semibold text-white">{p.symbol}</td>
                 <td className="px-3 py-2 text-gray-300">₹{p.entry_price.toFixed(1)}</td>
                 <td className="px-3 py-2 text-white font-mono">
@@ -97,7 +107,7 @@ export default function OpenPositions() {
                 </td>
                 <td className="px-3 py-2">
                   <button
-                    onClick={() => handleForceExit(p.id, p.symbol)}
+                    onClick={e => { e.stopPropagation(); handleForceExit(p.id, p.symbol) }}
                     className="text-xs px-2 py-1 rounded border border-red-800 text-red-400 hover:bg-red-900/30 whitespace-nowrap"
                   >
                     Exit

@@ -20,7 +20,7 @@ def scan_status(db: Session = Depends(get_db)):
     ).first()
     last_scan = row.last_date.isoformat() if row and row.last_date else None
     count = row.today_count if row else 0
-    return ScanStatus(last_scan_at=last_scan, candidate_count=count, running=runner._scan_running)
+    return ScanStatus(last_scan_at=last_scan, candidate_count=count, running=runner._scan_lock.locked())
 
 
 @router.post("/run")

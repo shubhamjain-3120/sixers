@@ -155,5 +155,17 @@ export interface TradeDetail extends ClosedTrade {
   high_water_mark: number | null
   trailing_state: string | null
   notes: string | null
+  ltp_at_entry: number | null
+  rsi_at_entry: number | null
+  pct_below_20d_high_at_entry: number | null
+  pct_below_50d_high_at_entry: number | null
+  dist_from_20dma_at_entry: number | null
+  dist_from_50dma_at_entry: number | null
+  volume_ratio_at_entry: number | null
+  swing_low_at_entry: number | null
+  swing_high_at_entry: number | null
+  pivot_support_at_entry: number | null
+  pivot_resistance_at_entry: number | null
+  green_after_red_at_entry: boolean | null
   ohlcv: OhlcvBar[]
 }

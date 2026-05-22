@@ -3,7 +3,7 @@ import { getCandidates, getScanStatus, getLiveLtp } from '../api/client'
 import type { CandidateRow, ScanStatus } from '../types'
 import CandidateRowComponent from './CandidateRow'
 
-export default function CandidatesTable() {
+export default function CandidatesTable({ onTradeChange }: { onTradeChange?: () => void }) {
   const [candidates, setCandidates] = useState<CandidateRow[]>([])
   const [sortBy, setSortBy] = useState<'score' | 'shubham_score' | 'pct_change'>('shubham_score')
   const [loading, setLoading] = useState(true)
@@ -111,7 +111,7 @@ export default function CandidatesTable() {
             </thead>
             <tbody>
               {sorted.map(c => (
-                <CandidateRowComponent key={c.symbol} candidate={c} onOrderPlaced={load} />
+                <CandidateRowComponent key={c.symbol} candidate={c} onOrderPlaced={() => { load(); onTradeChange?.() }} />
               ))}
             </tbody>
           </table>

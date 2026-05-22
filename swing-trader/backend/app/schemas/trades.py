@@ -95,6 +95,18 @@ class TradeDetail(BaseModel):
     pullback_score_at_entry: Optional[float] = None
     shubham_score_at_entry: Optional[float] = None
     notes: Optional[str] = None
+    ltp_at_entry: Optional[float] = None
+    rsi_at_entry: Optional[float] = None
+    pct_below_20d_high_at_entry: Optional[float] = None
+    pct_below_50d_high_at_entry: Optional[float] = None
+    dist_from_20dma_at_entry: Optional[float] = None
+    dist_from_50dma_at_entry: Optional[float] = None
+    volume_ratio_at_entry: Optional[float] = None
+    swing_low_at_entry: Optional[float] = None
+    swing_high_at_entry: Optional[float] = None
+    pivot_support_at_entry: Optional[float] = None
+    pivot_resistance_at_entry: Optional[float] = None
+    green_after_red_at_entry: Optional[bool] = None
     ohlcv: List[OhlcvBar] = []
 
     class Config:

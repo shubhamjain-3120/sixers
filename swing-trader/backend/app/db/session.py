@@ -39,6 +39,18 @@ def run_migrations():
         ("daily_scans", "shubham_score", "REAL", "NULL"),
         ("trades", "pullback_score_at_entry", "REAL", "NULL"),
         ("trades", "shubham_score_at_entry", "REAL", "NULL"),
+        ("trades", "ltp_at_entry", "REAL", "NULL"),
+        ("trades", "rsi_at_entry", "REAL", "NULL"),
+        ("trades", "pct_below_20d_high_at_entry", "REAL", "NULL"),
+        ("trades", "pct_below_50d_high_at_entry", "REAL", "NULL"),
+        ("trades", "dist_from_20dma_at_entry", "REAL", "NULL"),
+        ("trades", "dist_from_50dma_at_entry", "REAL", "NULL"),
+        ("trades", "volume_ratio_at_entry", "REAL", "NULL"),
+        ("trades", "swing_low_at_entry", "REAL", "NULL"),
+        ("trades", "swing_high_at_entry", "REAL", "NULL"),
+        ("trades", "pivot_support_at_entry", "REAL", "NULL"),
+        ("trades", "pivot_resistance_at_entry", "REAL", "NULL"),
+        ("trades", "green_after_red_at_entry", "INTEGER", "NULL"),
     ]
     indexes = [
         # Covers: filter(scan_date=X, score>=Y).order_by(score DESC)
