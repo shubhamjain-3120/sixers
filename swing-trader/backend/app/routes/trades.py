@@ -148,7 +148,7 @@ def place_trade(body: TradeEntryRequest, db: Session = Depends(get_db)):
         verdict_val = nc.verdict if nc else None
 
     try:
-        result = execute_entry(db, body.symbol, badge=badge_val, llm_verdict=verdict_val)
+        result = execute_entry(db, body.symbol, badge=badge_val, llm_verdict=verdict_val, custom_capital=body.custom_capital)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

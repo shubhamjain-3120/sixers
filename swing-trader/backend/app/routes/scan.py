@@ -264,3 +264,18 @@ def get_candidate_detail(symbol: str, db: Session = Depends(get_db)):
         news_headlines=per_headlines,
         scan_date=s.scan_date,
     )
+
+
+@router.get("/ltp")
+def get_live_ltp(symbols: str = Query(...), db: Session = Depends(get_db)):
+    from app.kite.client import get_kite_client
+    kite = get_kite_client(db)
+    if not kite:
+        raise HTTPException(status_code=503, detail="Kite not connected")
+    sym_list = [s.strip() for s in symbols.split(",") if s.strip()]
+    keys = [f"NSE:{s}" for s in sym_list]
+    try:
+        raw = kite.ltp(keys)
+        return {k.replace("NSE:", ""): v["last_price"] for k, v in raw.items()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

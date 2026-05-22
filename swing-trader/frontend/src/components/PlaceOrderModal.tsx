@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { placeTrade, getConfig, getStatsSummary } from '../api/client'
+import { placeTrade, getConfig, getStatsSummary, getLiveLtp } from '../api/client'
 import type { CandidateRow, Config, StatsSummary } from '../types'
 
 interface Props {
@@ -12,15 +12,25 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
   const [cfg, setCfg] = useState<Config | null>(null)
   const [stats, setStats] = useState<StatsSummary | null>(null)
   const [customCapital, setCustomCapital] = useState('')
+  const [ltp, setLtp] = useState(candidate.ltp ?? 0)
+  const [ltpLoading, setLtpLoading] = useState(false)
   const [status, setStatus] = useState<'idle' | 'placing' | 'done' | 'error'>('idle')
   const [error, setError] = useState('')
+
+  const fetchLtp = async () => {
+    setLtpLoading(true)
+    try {
+      const map = await getLiveLtp([candidate.symbol])
+      if (map[candidate.symbol] != null) setLtp(map[candidate.symbol])
+    } catch {}
+    setLtpLoading(false)
+  }
 
   useEffect(() => {
     getConfig().then(d => { setCfg(d); }).catch(() => {})
     getStatsSummary().then(setStats).catch(() => {})
+    fetchLtp()
   }, [])
-
-  const ltp = candidate.ltp ?? 0
   const defaultCapital = cfg ? (cfg.total_capital_inr * cfg.nifty50_alloc_pct) / 100 : 0
   const capitalAvailable = stats?.capital_available ?? null
 
@@ -38,7 +48,8 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
     setStatus('placing')
     setError('')
     try {
-      await placeTrade(candidate.symbol)
+      const capitalOverride = customCapital !== '' && !isNaN(parsedCustom) ? parsedCustom : undefined
+      await placeTrade(candidate.symbol, capitalOverride)
       setStatus('done')
       setTimeout(() => { onSuccess(); onClose() }, 1500)
     } catch (e: any) {
@@ -65,7 +76,19 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
         {/* Price context */}
         <div className="space-y-1.5 text-sm mb-4">
           <Row label="Segment" value={candidate.segment} />
-          <Row label="Current LTP" value={fmt(ltp)} />
+          <div className="flex justify-between items-center">
+            <span className="text-gray-400">Current LTP</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-gray-200">{fmt(ltp)}</span>
+              <button
+                onClick={fetchLtp}
+                disabled={ltpLoading}
+                className="text-gray-500 hover:text-white disabled:opacity-40 text-sm leading-none"
+              >
+                {ltpLoading ? '…' : '↻'}
+              </button>
+            </span>
+          </div>
           <Row label="Entry (limit +0.1%)" value={fmt(entryEst)} />
           <Row
             label="vs 20 DMA"

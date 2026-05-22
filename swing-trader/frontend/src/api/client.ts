@@ -27,12 +27,14 @@ export const getOhlcv = (symbol: string, days = 90) =>
 export const getBlockDeals = (symbol: string) =>
   api.get<BlockDealOut[]>(`/scan/block-deals/${symbol}`).then(r => r.data)
 export const triggerScan = () => api.post('/scan/run').then(r => r.data)
+export const getLiveLtp = (symbols: string[]) =>
+  api.get<Record<string, number>>('/scan/ltp', { params: { symbols: symbols.join(',') } }).then(r => r.data)
 
 // Trades
 export const getOpenPositions = () => api.get<OpenPosition[]>('/trades/open').then(r => r.data)
 export const getClosedTrades = () => api.get<ClosedTrade[]>('/trades/closed').then(r => r.data)
 export const getTradeDetail = (tradeId: number) => api.get<TradeDetail>(`/trades/${tradeId}`).then(r => r.data)
-export const placeTrade = (symbol: string) => api.post('/trades', { symbol }).then(r => r.data)
+export const placeTrade = (symbol: string, customCapital?: number) => api.post('/trades', { symbol, custom_capital: customCapital }).then(r => r.data)
 export const forceExit = (tradeId: number) => api.post(`/trades/${tradeId}/force-exit`).then(r => r.data)
 
 // Stats

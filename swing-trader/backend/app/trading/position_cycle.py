@@ -92,7 +92,7 @@ def run_cycle(db: Session, kite: RateLimitedKite) -> CycleReport:
             if ltp >= p.entry_price * (1 + target_pct / 100):
                 lock_floor = p.entry_price * (1 + lock_floor_pct / 100)
                 hw_based = p.high_water_mark * (1 - trail_dist / 100)
-                new_sl = max(lock_floor, hw_based)
+                new_sl = round(max(lock_floor, hw_based), 1)
 
                 gtt_id_to_delete = gtt["id"] if gtt else p.active_gtt_id
                 try:
@@ -103,7 +103,7 @@ def run_cycle(db: Session, kite: RateLimitedKite) -> CycleReport:
                 try:
                     new_gtt_id = place_single_trail_gtt(
                         kite, db, p.id, p.symbol, p.qty,
-                        round(new_sl, 1), ltp, p.gtt_tag,
+                        new_sl, ltp, p.gtt_tag,
                     )
                     p.active_gtt_id = new_gtt_id
                     p.trailing_state = "trailing"
@@ -118,13 +118,13 @@ def run_cycle(db: Session, kite: RateLimitedKite) -> CycleReport:
         elif p.trailing_state == "trailing":
             lock_floor = p.entry_price * (1 + lock_floor_pct / 100)
             hw_based = p.high_water_mark * (1 - trail_dist / 100)
-            candidate_sl = max(lock_floor, hw_based)
+            candidate_sl = round(max(lock_floor, hw_based), 1)
 
-            if candidate_sl > (p.current_sl_price or 0) + 0.05:
+            if candidate_sl > round(p.current_sl_price or 0, 1) + 0.045:
                 try:
                     modify_trail_gtt(
                         kite, db, p.id, p.active_gtt_id,
-                        p.symbol, p.qty, round(candidate_sl, 1), ltp,
+                        p.symbol, p.qty, candidate_sl, ltp,
                     )
                     p.current_sl_price = candidate_sl
                     _log_event(db, p.id, "TRAIL_UPDATED", {"new_sl": candidate_sl, "ltp": ltp})

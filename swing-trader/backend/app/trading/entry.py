@@ -11,7 +11,7 @@ from app.kite.gtt import place_oco_gtt
 logger = logging.getLogger(__name__)
 
 
-def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_verdict: Optional[str] = None) -> Optional[dict]:
+def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_verdict: Optional[str] = None, custom_capital: Optional[float] = None) -> Optional[dict]:
     kite = get_kite_client(db)
     if not kite:
         raise RuntimeError("No Kite session")
@@ -20,9 +20,11 @@ def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_ver
     inst = db.query(Instrument).filter(Instrument.symbol == symbol).first()
 
     # Compute qty
-    capital_for_trade = cfg.total_capital_inr * cfg.nifty50_alloc_pct / 100
+    capital_for_trade = custom_capital if custom_capital and custom_capital > 0 else cfg.total_capital_inr * cfg.nifty50_alloc_pct / 100
     ltp_data = kite.ltp([f"NSE:{symbol}"])
-    ltp = ltp_data[f"NSE:{symbol}"]["last_price"]
+    ltp = ltp_data.get(f"NSE:{symbol}", {}).get("last_price")
+    if not ltp or ltp <= 0:
+        raise ValueError("invalid_ltp")
     qty = int(capital_for_trade // ltp)
     if qty < 1:
         raise ValueError("insufficient_capital")

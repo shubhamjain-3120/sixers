@@ -5,7 +5,7 @@ from app.db.session import get_db
 from app.db.models import Trade, Config
 from app.schemas.stats import StatsSummary, ExitReasonBreakdown, VerdictStats, EquityPoint
 from typing import List
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def get_summary(db: Session = Depends(get_db)):
     closed_trades = db.query(Trade).filter(Trade.status == "CLOSED").all()
     total_closed = len(closed_trades)
 
-    today = date.today()
+    today = datetime.utcnow().date()
     todays_pnl = sum(
         t.pnl_inr or 0
         for t in closed_trades
@@ -85,7 +85,7 @@ def get_summary(db: Session = Depends(get_db)):
 
 @router.get("/equity-curve", response_model=List[EquityPoint])
 def get_equity_curve(days: int = Query(90, ge=1, le=365), db: Session = Depends(get_db)):
-    today = date.today()
+    today = datetime.utcnow().date()
     start = today - timedelta(days=days)
     closed = (
         db.query(Trade)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getCandidates, getScanStatus } from '../api/client'
+import { getCandidates, getScanStatus, getLiveLtp } from '../api/client'
 import type { CandidateRow, ScanStatus } from '../types'
 import CandidateRowComponent from './CandidateRow'
 
@@ -9,6 +9,19 @@ export default function CandidatesTable() {
   const [loading, setLoading] = useState(true)
   const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+  const [ltpRefreshing, setLtpRefreshing] = useState(false)
+
+  const refreshLtp = async () => {
+    setLtpRefreshing(true)
+    try {
+      const syms = candidates.map(c => c.symbol)
+      const ltpMap = await getLiveLtp(syms)
+      setCandidates(prev => prev.map(c =>
+        ltpMap[c.symbol] != null ? { ...c, ltp: ltpMap[c.symbol] } : c
+      ))
+    } catch {}
+    setLtpRefreshing(false)
+  }
 
   const load = async () => {
     setLoading(true)
@@ -76,7 +89,16 @@ export default function CandidatesTable() {
             <thead>
               <tr className="border-b border-gray-700 text-gray-500 text-xs uppercase tracking-wider">
                 <th className="py-2 pl-3 pr-4 text-center">Scrip</th>
-                <th className="py-2 pr-4 text-center">LTP</th>
+                <th className="py-2 pr-4 text-center">
+                  LTP
+                  <button
+                    onClick={refreshLtp}
+                    disabled={ltpRefreshing}
+                    className="ml-1 text-gray-600 hover:text-gray-300 disabled:opacity-40 text-xs"
+                  >
+                    {ltpRefreshing ? '…' : '↻'}
+                  </button>
+                </th>
                 <th className="py-2 pr-4 text-center">20DH</th>
                 <th className="py-2 pr-4 text-center">20DMA</th>
                 <th className="py-2 pr-4 text-center">50DMA</th>

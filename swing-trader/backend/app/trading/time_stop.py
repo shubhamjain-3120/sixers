@@ -29,7 +29,7 @@ def count_trading_days(start: date, end: date) -> int:
 def run_time_stop(db: Session, kite: RateLimitedKite):
     cfg = db.query(Config).filter(Config.id == 1).first()
     time_stop_days = cfg.time_stop_days if cfg else 15
-    today = date.today()
+    today = datetime.utcnow().date()
 
     positions = db.query(Trade).filter(Trade.status == "OPEN").all()
     for p in positions:

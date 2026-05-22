@@ -17,6 +17,7 @@ class OhlcvBar(BaseModel):
 
 class TradeEntryRequest(BaseModel):
     symbol: str
+    custom_capital: Optional[float] = None
 
 
 class TradeEntryResponse(BaseModel):

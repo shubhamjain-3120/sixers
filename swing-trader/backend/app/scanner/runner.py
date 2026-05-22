@@ -1,4 +1,5 @@
 import logging
+import threading
 import time
 from datetime import date, datetime, timedelta
 from sqlalchemy.orm import Session
@@ -11,22 +12,20 @@ from app.scanner.scorer import compute_score, compute_shubham_score
 
 logger = logging.getLogger(__name__)
 
-_scan_running = False
+_scan_lock = threading.Lock()
 
 
 def run_daily_scan():
-    global _scan_running
-    if _scan_running:
+    if not _scan_lock.acquire(blocking=False):
         logger.warning("Scan already running, skipping")
         return
-    _scan_running = True
     db = SessionLocal()
     try:
         _do_scan(db)
     except Exception as e:
         logger.error(f"Daily scan failed: {e}", exc_info=True)
     finally:
-        _scan_running = False
+        _scan_lock.release()
         db.close()
 
 
@@ -215,9 +214,10 @@ def revalidate_candidates(db: Session, kite):
             continue
 
         bars = list(reversed(bars))  # now oldest → newest
-        highs  = [b.high  for b in bars if b.high  is not None]
-        lows   = [b.low   for b in bars if b.low   is not None]
-        closes = [b.close for b in bars if b.close is not None]
+        bars = [b for b in bars if b.high is not None and b.low is not None and b.close is not None]
+        highs  = [b.high  for b in bars]
+        lows   = [b.low   for b in bars]
+        closes = [b.close for b in bars]
 
         if len(highs) >= 20:
             s.pct_below_20d_high = pct_below_high(ltp, highs, 20)

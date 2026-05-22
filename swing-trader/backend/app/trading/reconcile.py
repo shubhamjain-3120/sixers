@@ -36,8 +36,13 @@ def reconcile_exit(db: Session, kite, trade: Trade, gtt: dict):
         and o.get("transaction_type") == "SELL"
         and o.get("status") == "COMPLETE"
         and str(o.get("quantity", 0)) == str(trade.qty)
-        and abs((_parse_dt(o.get("order_timestamp", "")) or gtt_triggered_at) - gtt_triggered_at) <= window
     ]
+
+    def _within_window(o):
+        order_ts = _parse_dt(o.get("order_timestamp"))
+        return order_ts is not None and abs(order_ts - gtt_triggered_at) <= window
+
+    candidates = [o for o in candidates if _within_window(o)]
 
     if not candidates:
         logger.warning(f"Could not reconcile exit for {trade.symbol} trade {trade.id}")
@@ -56,7 +61,7 @@ def reconcile_exit(db: Session, kite, trade: Trade, gtt: dict):
 
     if trade.trailing_state == "trailing":
         trade.exit_reason = "trailing_stop"
-    elif fill_price >= (trade.initial_target_price or 0) * 0.995:
+    elif trade.initial_target_price and fill_price >= trade.initial_target_price * 0.995:
         trade.exit_reason = "target"
     else:
         trade.exit_reason = "stop_loss"
