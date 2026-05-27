@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { placeTrade, getConfig, getStatsSummary, getLiveLtp } from '../api/client'
-import type { CandidateRow, Config, StatsSummary } from '../types'
+import { placeTrade, getConfig, getStatsSummary, getLiveLtp, getCandidateDetail, triggerNewsClassify } from '../api/client'
+import type { CandidateRow, CandidateDetail, Config, StatsSummary } from '../types'
+import NewsSection from './candidateDetail/NewsSection'
 
 interface Props {
   candidate: CandidateRow
@@ -16,6 +17,10 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
   const [ltpLoading, setLtpLoading] = useState(false)
   const [status, setStatus] = useState<'idle' | 'placing' | 'done' | 'error'>('idle')
   const [error, setError] = useState('')
+  const [newsDetail, setNewsDetail] = useState<CandidateDetail | null>(
+    'news_verdict' in candidate ? (candidate as CandidateDetail) : null
+  )
+  const [classifying, setClassifying] = useState(false)
 
   const fetchLtp = async () => {
     setLtpLoading(true)
@@ -30,6 +35,7 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
     getConfig().then(d => { setCfg(d); }).catch(() => {})
     getStatsSummary().then(setStats).catch(() => {})
     fetchLtp()
+    getCandidateDetail(candidate.symbol).then(setNewsDetail).catch(() => {})
   }, [])
   const defaultCapital = cfg ? (cfg.total_capital_inr * cfg.nifty50_alloc_pct) / 100 : 0
   const capitalAvailable = stats?.capital_available ?? null
@@ -43,6 +49,18 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
   const targetEst = cfg ? entryEst * (1 + cfg.target_pct / 100) : 0
   const slEst = cfg ? entryEst * (1 - cfg.stop_loss_pct / 100) : 0
   const capitalDeployed = entryEst * qty
+
+  const handleReanalyze = async () => {
+    setClassifying(true)
+    try {
+      await triggerNewsClassify()
+      await new Promise(r => setTimeout(r, 3000))
+      const d = await getCandidateDetail(candidate.symbol)
+      setNewsDetail(d)
+    } finally {
+      setClassifying(false)
+    }
+  }
 
   const handleConfirm = async () => {
     setStatus('placing')
@@ -146,6 +164,13 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
             GTT bracket order will be placed at Zerodha immediately after fill.
           </p>
         </div>
+
+        {/* News section */}
+        {newsDetail && (
+          <div className="border-t border-gray-800 pt-4 mb-4">
+            <NewsSection detail={newsDetail} classifying={classifying} onReanalyze={handleReanalyze} />
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-950 border border-red-800 rounded p-3 text-red-400 text-sm mb-4 break-words">

@@ -20,7 +20,7 @@ def _parse_published(entry) -> datetime:
 def fetch_headlines(symbol: str, company_name: str, db: Session) -> List[Tuple[str, datetime, str]]:
     """Returns list of (headline, published_at, url) from Google News RSS, newest first."""
     cutoff = datetime.utcnow() - FIVE_DAYS_AGO
-    query = f"{symbol} {company_name} stock NSE"
+    query = f'"{company_name}"'
     url = f"https://news.google.com/rss/search?q={query.replace(' ', '+')}&hl=en-IN&gl=IN&ceid=IN:en"
 
     results = []

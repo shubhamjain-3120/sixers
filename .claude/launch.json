@@ -5,7 +5,7 @@
       "name": "swing-trader-frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "cwd": "/Users/shubhamjain/sixers/swing-trader/frontend",
+      "cwd": "swing-trader/frontend",
       "port": 5174
     }
   ]
