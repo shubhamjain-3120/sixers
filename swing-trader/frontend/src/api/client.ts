@@ -50,6 +50,17 @@ export const triggerTimestop = () => api.post('/system/time-stop').then(r => r.d
 export const triggerNewsClassify = () => api.post('/system/news-classify').then(r => r.data)
 export const getHealth = () => api.get('/system/health').then(r => r.data)
 
+// Market
+export interface NiftySummary {
+  summary: string
+  direction: 'up' | 'down' | 'flat'
+  headlines: Array<{ title: string; published_at: string; url: string }>
+  fetched_at: string
+  cached: boolean
+}
+export const getNiftySummary = (force = false) =>
+  api.get<NiftySummary>('/market/nifty-summary', { params: { force } }).then(r => r.data)
+
 // News
 export interface TestClassifyRequest {
   symbol: string
