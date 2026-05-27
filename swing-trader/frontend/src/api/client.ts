@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Config, AuthStatus, CandidateRow, CandidateDetail, OhlcvBar, BlockDealOut, OpenPosition, ClosedTrade, TradeDetail, StatsSummary, EquityPoint, PerHeadline } from '../types'
+import type { Config, AuthStatus, CandidateRow, CandidateDetail, OhlcvBar, OpenPosition, ClosedTrade, TradeDetail, StatsSummary, EquityPoint, PerHeadline } from '../types'
 
 // VITE_API_URL is set at build time on Render (e.g. https://swing-trader-api.fly.dev).
 // In local dev it is unset, so requests fall through to Vite's proxy → localhost:8000.
@@ -18,14 +18,12 @@ export const refreshUniverse = () => api.post('/universe/refresh').then(r => r.d
 
 // Scan
 export const getScanStatus = () => api.get<import('../types').ScanStatus>('/scan/status').then(r => r.data)
-export const getCandidates = (includeRed = false) =>
-  api.get<CandidateRow[]>('/scan/candidates', { params: { include_red: includeRed } }).then(r => r.data)
+export const getCandidates = () =>
+  api.get<CandidateRow[]>('/scan/candidates').then(r => r.data)
 export const getCandidateDetail = (symbol: string) =>
   api.get<CandidateDetail>(`/scan/detail/${symbol}`).then(r => r.data)
 export const getOhlcv = (symbol: string, days = 90) =>
   api.get<OhlcvBar[]>(`/scan/ohlcv/${symbol}`, { params: { days } }).then(r => r.data)
-export const getBlockDeals = (symbol: string) =>
-  api.get<BlockDealOut[]>(`/scan/block-deals/${symbol}`).then(r => r.data)
 export const triggerScan = () => api.post('/scan/run').then(r => r.data)
 export const getLiveLtp = (symbols: string[]) =>
   api.get<Record<string, number>>('/scan/ltp', { params: { symbols: symbols.join(',') } }).then(r => r.data)
@@ -67,8 +65,6 @@ export interface TestClassifyRequest {
   company_name?: string
   sector?: string
   headlines: string[]
-  block_flag?: boolean
-  sector_flag?: boolean
   ltp?: number
   pct_drop?: number
 }
@@ -77,9 +73,6 @@ export interface TestClassifyResponse {
   confidence: number
   summary: string
   per_headline: Array<{ idx: number; classification: string; reason: string }>
-  badge: string
-  block_flag: boolean
-  sector_flag: boolean
 }
 export const testClassify = (req: TestClassifyRequest) =>
   api.post<TestClassifyResponse>('/news/test-classify', req).then(r => r.data)

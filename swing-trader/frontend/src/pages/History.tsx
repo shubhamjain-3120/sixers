@@ -99,7 +99,7 @@ export default function History() {
           <thead className="bg-gray-900 text-gray-400 text-xs uppercase">
             <tr>
               <th className="px-3 py-2 w-6" />
-              {['Symbol', 'Entry', 'Exit', 'Entry ₹', 'Exit ₹', 'P&L%', 'P&L ₹', 'Days', 'Reason', 'Badge', 'Pull', 'Shub'].map(h => (
+              {['Symbol', 'Entry', 'Exit', 'Entry ₹', 'Exit ₹', 'P&L%', 'P&L ₹', 'Days', 'Reason', 'Pull', 'Shub'].map(h => (
                 <th key={h} className="px-3 py-2 text-left">{h}</th>
               ))}
             </tr>
@@ -128,16 +128,6 @@ export default function History() {
                     </td>
                     <td className="px-3 py-2 text-gray-400">{t.days_held ?? '–'}</td>
                     <td className="px-3 py-2 text-xs text-gray-500">{t.exit_reason ?? '–'}</td>
-                    <td className="px-3 py-2 text-xs">
-                      {t.badge_at_entry && (
-                        <span className={
-                          t.badge_at_entry === 'GREEN' ? 'text-green-400' :
-                          t.badge_at_entry === 'RED' ? 'text-red-400' : 'text-yellow-400'
-                        }>
-                          {t.badge_at_entry}
-                        </span>
-                      )}
-                    </td>
                     <td className="px-3 py-2 font-mono text-blue-300">
                       {t.pullback_score_at_entry != null ? t.pullback_score_at_entry.toFixed(0) : '–'}
                     </td>
@@ -147,7 +137,7 @@ export default function History() {
                   </tr>
                   {isExpanded && (
                     <tr key={`${t.id}-detail`} className="border-t border-gray-800 bg-gray-950">
-                      <td colSpan={13} className="p-4">
+                      <td colSpan={12} className="p-4">
                         {detailLoading && <p className="text-gray-500 text-sm">Loading...</p>}
                         {detail && detail.id === t.id && <TradeDetailPanel detail={detail} />}
                       </td>

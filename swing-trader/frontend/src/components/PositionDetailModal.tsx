@@ -22,12 +22,6 @@ function pctColor(v: number | null | undefined) {
   return v >= 0 ? 'text-green-400' : 'text-red-400'
 }
 
-function badgeColor(b: string | null) {
-  if (b === 'GREEN') return 'text-green-400'
-  if (b === 'RED') return 'text-red-400'
-  return 'text-yellow-400'
-}
-
 function verdictColor(v: string | null) {
   if (!v) return 'text-gray-400'
   if (v === 'NOISE') return 'text-gray-400'
@@ -73,11 +67,6 @@ export default function PositionDetailModal({ tradeId, onClose }: Props) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <div>
             <span className="text-white font-bold text-lg">{detail?.symbol ?? '…'}</span>
-            {detail?.badge_at_entry && (
-              <span className={`ml-2 text-xs font-semibold ${badgeColor(detail.badge_at_entry)}`}>
-                {detail.badge_at_entry}
-              </span>
-            )}
           </div>
           <button
             onClick={onClose}
@@ -136,7 +125,6 @@ export default function PositionDetailModal({ tradeId, onClose }: Props) {
                     <Row label="Pullback Score" value={fmt(detail.pullback_score_at_entry, 1)} />
                     <Row label="Shubham Score" value={fmt(detail.shubham_score_at_entry, 1)} />
                     <Row label="RSI (14)" value={fmt(detail.rsi_at_entry, 1)} />
-                    <Row label="Badge" value={detail.badge_at_entry ?? '–'} valueClass={badgeColor(detail.badge_at_entry)} />
                     <Row
                       label="LLM Verdict"
                       value={detail.llm_verdict_at_entry ?? '–'}

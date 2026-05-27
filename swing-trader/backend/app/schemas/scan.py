@@ -22,7 +22,6 @@ class CandidateRow(BaseModel):
     score: float
     shubham_score: Optional[float] = None
     sparkline_data: List[float] = []
-    badge: str
     llm_summary: Optional[str] = None
     scan_date: date
 
@@ -65,10 +64,3 @@ class OhlcvBar(BaseModel):
     volume: Optional[int] = None
 
 
-class BlockDealOut(BaseModel):
-    deal_date: date
-    client_name: Optional[str] = None
-    deal_type: Optional[str] = None
-    quantity: Optional[int] = None
-    price: Optional[float] = None
-    source: Optional[str] = None

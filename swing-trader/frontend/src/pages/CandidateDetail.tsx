@@ -1,11 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { getCandidateDetail, getOhlcv, getBlockDeals, triggerNewsClassify } from '../api/client'
-import type { CandidateDetail, OhlcvBar, BlockDealOut } from '../types'
+import { getCandidateDetail, getOhlcv, triggerNewsClassify } from '../api/client'
+import type { CandidateDetail, OhlcvBar } from '../types'
 import PlaceOrderModal from '../components/PlaceOrderModal'
 import PriceChart, { ChartPoint } from '../components/candidateDetail/PriceChart'
 import SignalsTable from '../components/candidateDetail/SignalsTable'
-import BlockDealsTable from '../components/candidateDetail/BlockDealsTable'
 import NewsSection from '../components/candidateDetail/NewsSection'
 
 function sma(closes: number[], period: number, idx: number): number | null {
@@ -29,7 +28,6 @@ export default function CandidateDetail() {
   const navigate = useNavigate()
   const [detail, setDetail] = useState<CandidateDetail | null>(null)
   const [ohlcv, setOhlcv] = useState<OhlcvBar[]>([])
-  const [deals, setDeals] = useState<BlockDealOut[]>([])
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [classifying, setClassifying] = useState(false)
@@ -40,11 +38,9 @@ export default function CandidateDetail() {
     Promise.all([
       getCandidateDetail(symbol),
       getOhlcv(symbol, 90),
-      getBlockDeals(symbol),
-    ]).then(([d, o, bl]) => {
+    ]).then(([d, o]) => {
       setDetail(d)
       setOhlcv(o)
-      setDeals(bl)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [symbol])
 
@@ -80,7 +76,6 @@ export default function CandidateDetail() {
 
       <PriceChart chartData={chartData} support={detail.support} resistance={detail.resistance} />
       <SignalsTable detail={detail} lastSma20={lastSma20} lastSma50={lastSma50} />
-      <BlockDealsTable deals={deals} />
       <NewsSection
         detail={detail}
         classifying={classifying}
@@ -90,19 +85,12 @@ export default function CandidateDetail() {
         }}
       />
 
-      {detail.badge !== 'RED' && (
-        <button
-          onClick={() => setShowModal(true)}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-bold"
-        >
-          Place Order — {detail.symbol}
-        </button>
-      )}
-      {detail.badge === 'RED' && (
-        <div className="w-full py-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-center text-sm">
-          RED badge — order placement blocked
-        </div>
-      )}
+      <button
+        onClick={() => setShowModal(true)}
+        className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-bold"
+      >
+        Place Order — {detail.symbol}
+      </button>
 
       {showModal && (
         <PlaceOrderModal

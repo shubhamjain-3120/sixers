@@ -129,38 +129,24 @@ def place_trade(body: TradeEntryRequest, db: Session = Depends(get_db)):
     if not token:
         raise HTTPException(status_code=401, detail="kite_session_expired")
 
-    # Badge check
-    today = date.today()
-    setup = (
-        db.query(SetupClassification)
-        .filter(
-            SetupClassification.symbol == body.symbol,
-            SetupClassification.scan_date == today,
-        )
-        .first()
-    )
-    if setup and setup.badge == "RED":
-        raise HTTPException(status_code=400, detail="red_badge_blocked")
-
     # Concurrent positions check
+    today = date.today()
     cfg = db.query(Config).filter(Config.id == 1).first()
     open_count = db.query(Trade).filter(Trade.status == "OPEN").count()
     if cfg and open_count >= cfg.max_concurrent_positions:
         raise HTTPException(status_code=400, detail="max_positions_reached")
 
-    badge_val = setup.badge if setup else None
     verdict_val = None
-    if setup:
-        from app.db.models import NewsClassification
-        nc = (
-            db.query(NewsClassification)
-            .filter(NewsClassification.symbol == body.symbol, NewsClassification.classification_date == today)
-            .first()
-        )
-        verdict_val = nc.verdict if nc else None
+    from app.db.models import NewsClassification
+    nc = (
+        db.query(NewsClassification)
+        .filter(NewsClassification.symbol == body.symbol, NewsClassification.classification_date == today)
+        .first()
+    )
+    verdict_val = nc.verdict if nc else None
 
     try:
-        result = execute_entry(db, body.symbol, badge=badge_val, llm_verdict=verdict_val, custom_capital=body.custom_capital)
+        result = execute_entry(db, body.symbol, badge=None, llm_verdict=verdict_val, custom_capital=body.custom_capital)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

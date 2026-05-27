@@ -159,11 +159,6 @@ def job_eod_sync():
         db.close()
 
 
-@_trading_day_job
-def job_deals_fetch():
-    from app.nse.deals import fetch_deals
-    fetch_deals()
-
 
 @_trading_day_job
 def job_news_classification():
@@ -199,10 +194,6 @@ def create_scheduler() -> BackgroundScheduler:
     sched.add_job(job_daily_scan, CronTrigger(day_of_week="mon-fri", hour=15, minute=45, timezone=IST), id="daily_scan")
     # EOD sync — 16:00 IST
     sched.add_job(job_eod_sync, CronTrigger(day_of_week="mon-fri", hour=16, minute=0, timezone=IST), id="eod_sync")
-    # Block/bulk deals — 17:30, 18:00, 18:30
-    for minute_offset, job_id in [(30, "deals_1730"), (0, "deals_1800"), (30, "deals_1830")]:
-        hour = 17 if job_id == "deals_1730" else 18
-        sched.add_job(job_deals_fetch, CronTrigger(day_of_week="mon-fri", hour=hour, minute=minute_offset, timezone=IST), id=job_id)
     # News classification — 18:00 IST
     sched.add_job(job_news_classification, CronTrigger(day_of_week="mon-fri", hour=18, minute=0, timezone=IST), id="news_classification")
 

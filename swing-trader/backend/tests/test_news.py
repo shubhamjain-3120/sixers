@@ -1,40 +1,11 @@
-"""M6 acceptance tests for news classification + badge logic."""
+"""Acceptance tests for news classification logic."""
 import json
 import pytest
 from unittest.mock import patch, MagicMock
 from datetime import date, datetime
 
-from app.news.classifier import finalize_badge, classify_news, SYSTEM_PROMPT
+from app.news.classifier import classify_news, SYSTEM_PROMPT
 from app.news.fetcher import fetch_headlines
-
-
-# ── finalize_badge unit tests ─────────────────────────────────────────────────
-
-def test_fundamental_risk_always_red():
-    assert finalize_badge(block_flag=False, sector_flag=False, news_verdict="FUNDAMENTAL_RISK") == "RED"
-    assert finalize_badge(block_flag=True, sector_flag=True, news_verdict="FUNDAMENTAL_RISK") == "RED"
-
-
-def test_mixed_verdict_is_red():
-    assert finalize_badge(block_flag=False, sector_flag=False, news_verdict="MIXED") == "RED"
-    assert finalize_badge(block_flag=True, sector_flag=True, news_verdict="MIXED") == "RED"
-
-
-def test_noise_with_block_flag_is_green():
-    assert finalize_badge(block_flag=True, sector_flag=False, news_verdict="NOISE") == "GREEN"
-
-
-def test_noise_with_sector_flag_is_green():
-    assert finalize_badge(block_flag=False, sector_flag=True, news_verdict="NOISE") == "GREEN"
-
-
-def test_noise_without_flags_is_yellow():
-    assert finalize_badge(block_flag=False, sector_flag=False, news_verdict="NOISE") == "YELLOW"
-
-
-def test_insufficient_data_is_yellow():
-    assert finalize_badge(block_flag=False, sector_flag=False, news_verdict="INSUFFICIENT_DATA") == "YELLOW"
-    assert finalize_badge(block_flag=True, sector_flag=True, news_verdict="INSUFFICIENT_DATA") == "YELLOW"
 
 
 # ── classify_news with mocked OpenAI ─────────────────────────────────────────
@@ -64,8 +35,8 @@ def _headlines(texts: list[str]):
 
 
 @patch("app.news.classifier.OpenAI")
-def test_guidance_cut_headline_produces_red_badge(mock_openai_cls):
-    """S6 scenario: 'TCS guides Q3 revenue 5% below estimate' → badge=RED."""
+def test_guidance_cut_produces_fundamental_risk(mock_openai_cls):
+    """Guidance cut headline → FUNDAMENTAL_RISK verdict."""
     per_hl = [
         {"idx": 1, "classification": "FUNDAMENTAL_NEGATIVE", "reason": "guidance cut"},
     ]
@@ -91,13 +62,11 @@ def test_guidance_cut_headline_produces_red_badge(mock_openai_cls):
     )
 
     assert result["verdict"] == "FUNDAMENTAL_RISK"
-    badge = finalize_badge(block_flag=False, sector_flag=False, news_verdict=result["verdict"])
-    assert badge == "RED", f"Expected RED, got {badge}"
 
 
 @patch("app.news.classifier.OpenAI")
-def test_block_deal_headline_with_flag_produces_green_badge(mock_openai_cls):
-    """S6 scenario: 'Block deal worth 500cr in HDFC' + block_flag=True → badge=GREEN."""
+def test_block_deal_headline_produces_noise(mock_openai_cls):
+    """Block deal headline → NOISE verdict."""
     per_hl = [
         {"idx": 1, "classification": "NOISE", "reason": "block deal is institutional selling, noise"},
     ]
@@ -123,37 +92,11 @@ def test_block_deal_headline_with_flag_produces_green_badge(mock_openai_cls):
     )
 
     assert result["verdict"] == "NOISE"
-    badge = finalize_badge(block_flag=True, sector_flag=False, news_verdict=result["verdict"])
-    assert badge == "GREEN", f"Expected GREEN, got {badge}"
 
 
 @patch("app.news.classifier.OpenAI")
-def test_block_deal_noise_without_flag_is_yellow(mock_openai_cls):
-    """NOISE verdict but no block/sector flag → YELLOW."""
-    per_hl = [{"idx": 1, "classification": "NOISE", "reason": "macro noise"}]
-    mock_openai_cls.return_value.chat.completions.create.return_value = _mock_openai_response(
-        verdict="NOISE", per_headline=per_hl
-    )
-
-    db = _make_db()
-    result = classify_news(
-        symbol="RELIANCE",
-        name="Reliance Industries",
-        sector="Energy",
-        headlines=_headlines(["Market weakness drags Reliance"]),
-        ltp=2800.0, pct_drop=1.5, n_sessions=2,
-        sector_index_name="NIFTY 50", sector_change_pct=-0.8,
-        scan_date=date(2099, 6, 3),
-        db=db,
-    )
-
-    badge = finalize_badge(block_flag=False, sector_flag=False, news_verdict=result["verdict"])
-    assert badge == "YELLOW"
-
-
-@patch("app.news.classifier.OpenAI")
-def test_openai_failure_falls_back_to_yellow(mock_openai_cls):
-    """If OpenAI fails both attempts, badge must be YELLOW (never blocks trading)."""
+def test_openai_failure_falls_back_to_insufficient_data(mock_openai_cls):
+    """If OpenAI fails both attempts, verdict is INSUFFICIENT_DATA."""
     mock_openai_cls.return_value.chat.completions.create.side_effect = Exception("timeout")
 
     db = _make_db()
@@ -169,8 +112,6 @@ def test_openai_failure_falls_back_to_yellow(mock_openai_cls):
     )
 
     assert result["verdict"] == "INSUFFICIENT_DATA"
-    badge = finalize_badge(block_flag=False, sector_flag=False, news_verdict=result["verdict"])
-    assert badge == "YELLOW"
 
 
 def test_system_prompt_contains_required_classifications():

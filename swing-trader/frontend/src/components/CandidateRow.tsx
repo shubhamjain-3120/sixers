@@ -34,7 +34,6 @@ function highCell(n: number | null | undefined) {
 export default function CandidateRow({ candidate, onOrderPlaced }: Props) {
   const [showModal, setShowModal] = useState(false)
   const navigate = useNavigate()
-  const canTrade = candidate.badge !== 'RED'
   const ltpColor = (candidate.pct_change_today ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
 
   return (
@@ -76,8 +75,7 @@ export default function CandidateRow({ candidate, onOrderPlaced }: Props) {
         <td className="py-2.5 pl-2 pr-4 text-center">
           <button
             onClick={e => { e.stopPropagation(); setShowModal(true) }}
-            disabled={!canTrade}
-            className="px-3 py-1 rounded bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+            className="px-3 py-1 rounded bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold whitespace-nowrap"
           >
             Buy
           </button>

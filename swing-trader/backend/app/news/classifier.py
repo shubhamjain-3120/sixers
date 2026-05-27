@@ -5,7 +5,7 @@ from typing import List, Tuple, Optional
 from sqlalchemy.orm import Session
 from openai import OpenAI
 from app.config import settings
-from app.db.models import NewsClassification, SetupClassification, BlockDeal, DailyScan
+from app.db.models import NewsClassification, SetupClassification, DailyScan
 
 logger = logging.getLogger(__name__)
 
@@ -146,14 +146,6 @@ def _save_classification(
         db.rollback()
 
 
-def finalize_badge(block_flag: bool, sector_flag: bool, news_verdict: str) -> str:
-    if news_verdict in ("FUNDAMENTAL_RISK", "MIXED"):
-        return "RED"
-    if news_verdict == "NOISE" and (block_flag or sector_flag):
-        return "GREEN"
-    return "YELLOW"
-
-
 def run_news_classification():
     """Full pipeline: fetch news + classify + badge for all today's candidates."""
     from app.db.session import SessionLocal
@@ -198,15 +190,6 @@ def run_news_classification():
                 db=db,
             )
 
-            # Check block deals today
-            block_flag = (
-                db.query(BlockDeal)
-                .filter(BlockDeal.symbol == s.symbol, BlockDeal.deal_date == today)
-                .first()
-            ) is not None
-
-            badge = finalize_badge(block_flag, False, result["verdict"])
-
             existing_setup = (
                 db.query(SetupClassification)
                 .filter(
@@ -216,24 +199,21 @@ def run_news_classification():
                 .first()
             )
             if existing_setup:
-                existing_setup.block_flag = block_flag
                 existing_setup.news_verdict = result["verdict"]
-                existing_setup.badge = badge
             else:
                 db.add(SetupClassification(
                     symbol=s.symbol,
                     scan_date=today,
-                    block_flag=block_flag,
                     sector_flag=False,
                     news_verdict=result["verdict"],
-                    badge=badge,
+                    badge="YELLOW",
                 ))
             try:
                 db.commit()
             except Exception:
                 db.rollback()
 
-            logger.info(f"{s.symbol}: verdict={result['verdict']} badge={badge}")
+            logger.info(f"{s.symbol}: verdict={result['verdict']}")
 
     except Exception as e:
         logger.error(f"News classification pipeline failed: {e}", exc_info=True)

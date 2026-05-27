@@ -24,8 +24,6 @@ class TestClassifyRequest(BaseModel):
     company_name: str = ""
     sector: str = "Unknown"
     headlines: List[str]
-    block_flag: bool = False
-    sector_flag: bool = False
     ltp: float = 100.0
     pct_drop: float = 3.0
 
@@ -38,7 +36,7 @@ def test_classify(req: TestClassifyRequest, db: Session = Depends(get_db)):
     and per-headline classifications.
     """
     from datetime import datetime, timezone
-    from app.news.classifier import classify_news, finalize_badge
+    from app.news.classifier import classify_news
     from app.db.models import NewsClassification
     from datetime import date
     import json
@@ -78,14 +76,9 @@ def test_classify(req: TestClassifyRequest, db: Session = Depends(get_db)):
     ).delete()
     db.commit()
 
-    badge = finalize_badge(req.block_flag, req.sector_flag, result["verdict"])
-
     return {
         "verdict": result["verdict"],
         "confidence": result["confidence"],
         "summary": result["summary"],
         "per_headline": result["per_headline"],
-        "badge": badge,
-        "block_flag": req.block_flag,
-        "sector_flag": req.sector_flag,
     }

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from app.db.session import get_db
-from app.db.models import DailyScan, Instrument, SetupClassification, NewsClassification, OhlcvDaily, BlockDeal
-from app.schemas.scan import CandidateRow, ScanStatus, OhlcvBar, BlockDealOut, CandidateDetail, PerHeadline
+from app.db.models import DailyScan, Instrument, SetupClassification, NewsClassification, OhlcvDaily
+from app.schemas.scan import CandidateRow, ScanStatus, OhlcvBar, CandidateDetail, PerHeadline
 from typing import List, Optional
 from datetime import date, datetime, timedelta
 import logging
@@ -35,7 +35,6 @@ def trigger_scan():
 @router.get("/candidates", response_model=List[CandidateRow])
 def get_candidates(
     scan_date: Optional[date] = None,
-    include_red: bool = False,
     db: Session = Depends(get_db)
 ):
     from sqlalchemy import and_
@@ -79,10 +78,6 @@ def get_candidates(
 
     result = []
     for s, inst, setup, news_cls in rows:
-        badge = setup.badge if setup else "YELLOW"
-        if not include_red and badge == "RED":
-            continue
-
         pct_change = None
         if s.ltp and s.prev_close and s.prev_close > 0:
             pct_change = (s.ltp - s.prev_close) / s.prev_close * 100
@@ -118,7 +113,6 @@ def get_candidates(
                 dist_from_20dma_pct=s.dist_from_20dma_pct,
                 dist_from_50dma_pct=s.dist_from_50dma_pct,
                 sparkline_data=[],
-                badge=badge,
                 llm_summary=news_cls.summary if news_cls else None,
                 scan_date=s.scan_date,
             )
@@ -137,28 +131,6 @@ def get_ohlcv(symbol: str, days: int = 90, db: Session = Depends(get_db)):
     )
     return [OhlcvBar(date=r.date, open=r.open, high=r.high, low=r.low, close=r.close, volume=r.volume) for r in rows]
 
-
-@router.get("/block-deals/{symbol}", response_model=List[BlockDealOut])
-def get_block_deals(symbol: str, days: int = 5, db: Session = Depends(get_db)):
-    since = date.today() - timedelta(days=days * 2)  # cover weekends
-    rows = (
-        db.query(BlockDeal)
-        .filter(BlockDeal.symbol == symbol.upper(), BlockDeal.deal_date >= since)
-        .order_by(desc(BlockDeal.deal_date))
-        .limit(20)
-        .all()
-    )
-    return [
-        BlockDealOut(
-            deal_date=r.deal_date,
-            client_name=r.client_name,
-            deal_type=r.deal_type,
-            quantity=r.quantity,
-            price=r.price,
-            source=r.source,
-        )
-        for r in rows
-    ]
 
 
 @router.get("/detail/{symbol}", response_model=CandidateDetail)
@@ -198,7 +170,6 @@ def get_candidate_detail(symbol: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="no_scan_data")
 
     s, inst, setup, news_cls = row
-    badge = setup.badge if setup else "YELLOW"
 
     pct_change = None
     if s.ltp and s.prev_close and s.prev_close > 0:
@@ -257,7 +228,6 @@ def get_candidate_detail(symbol: str, db: Session = Depends(get_db)):
         shubham_score=s.shubham_score,
         green_after_red=s.green_after_red,
         sparkline_data=[],
-        badge=badge,
         llm_summary=news_cls.summary if news_cls else None,
         news_verdict=news_cls.verdict if news_cls else None,
         news_confidence=news_cls.confidence if news_cls else None,

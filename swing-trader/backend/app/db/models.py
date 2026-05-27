@@ -88,17 +88,6 @@ class DailyScan(Base):
     __table_args__ = (UniqueConstraint("symbol", "scan_date"),)
 
 
-class BlockDeal(Base):
-    __tablename__ = "block_deals"
-    id = Column(Integer, primary_key=True)
-    deal_date = Column(Date, nullable=False, index=True)
-    symbol = Column(String, nullable=False, index=True)
-    client_name = Column(String)
-    deal_type = Column(String)
-    quantity = Column(Integer)
-    price = Column(Float)
-    source = Column(String)
-
 
 class NewsClassification(Base):
     __tablename__ = "news_classifications"
@@ -119,7 +108,6 @@ class SetupClassification(Base):
     id = Column(Integer, primary_key=True)
     symbol = Column(String, nullable=False)
     scan_date = Column(Date, nullable=False)
-    block_flag = Column(Boolean, default=False)
     sector_flag = Column(Boolean, default=False)
     news_verdict = Column(String)
     badge = Column(String, nullable=False)

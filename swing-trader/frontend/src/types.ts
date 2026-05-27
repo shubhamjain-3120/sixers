@@ -37,7 +37,6 @@ export interface CandidateRow {
   dist_from_20dma_pct: number | null
   dist_from_50dma_pct: number | null
   sparkline_data: number[]
-  badge: 'GREEN' | 'YELLOW' | 'RED'
   llm_summary: string | null
   scan_date: string
 }
@@ -139,14 +138,6 @@ export interface OhlcvBar {
   volume: number | null
 }
 
-export interface BlockDealOut {
-  deal_date: string
-  client_name: string | null
-  deal_type: string | null
-  quantity: number | null
-  price: number | null
-  source: string | null
-}
 
 export interface TradeDetail extends ClosedTrade {
   segment: string | null
