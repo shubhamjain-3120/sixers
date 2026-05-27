@@ -82,6 +82,8 @@ export interface StatsSummary {
   capital_deployed: number
   capital_available: number
   todays_pnl: number
+  this_month_pnl: number
+  this_fy_pnl: number
   total_closed_trades: number
   win_rate: number
   avg_win_pct: number

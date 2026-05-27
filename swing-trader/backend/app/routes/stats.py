@@ -31,6 +31,23 @@ def get_summary(db: Session = Depends(get_db)):
         if t.exit_date and t.exit_date.date() == today
     )
 
+    # This month: closed trades exited in the current calendar month
+    this_month_pnl = sum(
+        t.pnl_inr or 0
+        for t in closed_trades
+        if t.exit_date
+        and t.exit_date.date().year == today.year
+        and t.exit_date.date().month == today.month
+    )
+
+    # This financial year (India FY: Apr 1 – Mar 31)
+    fy_start = date(today.year if today.month >= 4 else today.year - 1, 4, 1)
+    this_fy_pnl = sum(
+        t.pnl_inr or 0
+        for t in closed_trades
+        if t.exit_date and t.exit_date.date() >= fy_start
+    )
+
     wins = [t for t in closed_trades if (t.pnl_pct or 0) > 0]
     losses = [t for t in closed_trades if (t.pnl_pct or 0) <= 0]
     win_rate = len(wins) / total_closed if total_closed > 0 else 0.0
@@ -73,6 +90,8 @@ def get_summary(db: Session = Depends(get_db)):
         capital_deployed=capital_deployed,
         capital_available=capital_available,
         todays_pnl=todays_pnl,
+        this_month_pnl=this_month_pnl,
+        this_fy_pnl=this_fy_pnl,
         total_closed_trades=total_closed,
         win_rate=win_rate,
         avg_win_pct=avg_win,

@@ -21,6 +21,8 @@ class StatsSummary(BaseModel):
     capital_deployed: float
     capital_available: float
     todays_pnl: float
+    this_month_pnl: float = 0.0
+    this_fy_pnl: float = 0.0
     total_closed_trades: int
     win_rate: float
     avg_win_pct: float
