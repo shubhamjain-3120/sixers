@@ -74,7 +74,7 @@ def run_migrations():
                     ))
                 conn.commit()
             except Exception:
-                pass  # column already exists (SQLite path)
+                conn.rollback()  # column already exists (SQLite path)
 
         # Fix legacy Postgres DBs where green_after_red_at_entry was created as
         # INTEGER but the model maps it to Boolean (INSERTs fail without a cast).
@@ -86,14 +86,14 @@ def run_migrations():
                 ))
                 conn.commit()
             except Exception:
-                pass
+                conn.rollback()
 
         for idx_sql in indexes:
             try:
                 conn.execute(text(idx_sql))
                 conn.commit()
             except Exception:
-                pass
+                conn.rollback()
 
     _backfill_shubham_scores()
 
