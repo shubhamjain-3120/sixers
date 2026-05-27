@@ -29,3 +29,5 @@ out/
 
 # Logs
 *.log
+node_modules
+swing-trader/frontend/node_modules
