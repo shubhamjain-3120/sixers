@@ -50,7 +50,7 @@ def run_migrations():
         ("trades", "swing_high_at_entry", "REAL", "NULL"),
         ("trades", "pivot_support_at_entry", "REAL", "NULL"),
         ("trades", "pivot_resistance_at_entry", "REAL", "NULL"),
-        ("trades", "green_after_red_at_entry", "INTEGER", "NULL"),
+        ("trades", "green_after_red_at_entry", "BOOLEAN", "NULL"),
     ]
     indexes = [
         # Covers: filter(scan_date=X, score>=Y).order_by(score DESC)
@@ -75,6 +75,18 @@ def run_migrations():
                 conn.commit()
             except Exception:
                 pass  # column already exists (SQLite path)
+
+        # Fix legacy Postgres DBs where green_after_red_at_entry was created as
+        # INTEGER but the model maps it to Boolean (INSERTs fail without a cast).
+        if _is_postgres:
+            try:
+                conn.execute(text(
+                    "ALTER TABLE trades ALTER COLUMN green_after_red_at_entry "
+                    "TYPE BOOLEAN USING (green_after_red_at_entry <> 0)"
+                ))
+                conn.commit()
+            except Exception:
+                pass
 
         for idx_sql in indexes:
             try:
