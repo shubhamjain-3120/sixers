@@ -7,6 +7,11 @@ class Settings(BaseSettings):
     kite_api_secret: str = ""
     kite_redirect_url: str = "http://localhost:8000/api/auth/kite/callback"
 
+    # Automated daily login (TOTP-based 2FA)
+    kite_user_id: str = ""
+    kite_password: str = ""
+    kite_totp_secret: str = ""
+
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
 

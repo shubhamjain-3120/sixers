@@ -81,12 +81,20 @@ def job_mark_token_expired():
         db.close()
 
 
-def job_login_reminder():
+def job_auto_login():
     from app.db.session import SessionLocal
-    from app.telegram_bot.reminder import maybe_send_login_reminder
+    from app.kite.auto_login import auto_login
+    from app.telegram_bot.reminder import send_alert
+    from app.config import settings
     db = SessionLocal()
     try:
-        maybe_send_login_reminder(db)
+        auto_login(db)
+    except Exception as e:
+        logger.error(f"Auto-login failed: {e}")
+        send_alert(
+            f"⚠️ Kite auto-login failed: {e}\n\n"
+            f"Tap to login manually: {settings.app_base_url}/dashboard"
+        )
     finally:
         db.close()
 
@@ -175,8 +183,8 @@ def create_scheduler() -> BackgroundScheduler:
     sched.add_job(job_kite_instruments, CronTrigger(hour=8, minute=30, timezone=IST), id="kite_instruments")
     # Mark token expired — daily 06:00 IST
     sched.add_job(job_mark_token_expired, CronTrigger(hour=6, minute=0, timezone=IST), id="mark_token_expired")
-    # Login reminder — weekdays 06:30 IST
-    sched.add_job(job_login_reminder, CronTrigger(day_of_week="mon-fri", hour=6, minute=30, timezone=IST), id="login_reminder")
+    # Auto-login — weekdays 06:32 IST (after token-expiry mark, before morning sync)
+    sched.add_job(job_auto_login, CronTrigger(day_of_week="mon-fri", hour=6, minute=32, timezone=IST), id="auto_login")
     # Morning sync — 09:00 IST trading days
     sched.add_job(job_morning_sync, CronTrigger(day_of_week="mon-fri", hour=9, minute=0, timezone=IST), id="morning_sync")
     # Candidate re-validation — 09:00 IST trading days
