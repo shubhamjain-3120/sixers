@@ -61,7 +61,7 @@ export default function OpenPositions({ onTradeChange }: { onTradeChange?: () =>
           Open Positions ({positions.length})
         </h2>
         <button
-          onClick={load}
+          onClick={() => { load(); onTradeChange?.() }}
           disabled={loading}
           className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-40"
         >
