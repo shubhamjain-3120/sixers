@@ -70,8 +70,8 @@ def get_candidates(
         )
         .filter(
             DailyScan.scan_date == scan_date,
-            DailyScan.score >= min_score,
-            DailyScan.shubham_score >= min_shubham,
+            func.coalesce(DailyScan.score, 0) >= min_score,
+            func.coalesce(DailyScan.shubham_score, 0) >= min_shubham,
         )
         .order_by(desc(DailyScan.shubham_score), desc(DailyScan.score))
         .all()

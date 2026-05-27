@@ -15,8 +15,8 @@ NIFTY50_CSV_URL = "https://nsearchives.nseindia.com/content/indices/ind_nifty50l
 NIFTY500_CSV_URL = "https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv"
 
 HARDCODED_ETFS = [
-    {"symbol": "NIFTYBEES", "name": "Nippon India ETF Nifty BeES", "segment": "ETF"},
-    {"symbol": "MID150BEES", "name": "Nippon India ETF Nifty Midcap 150", "segment": "ETF"},
+    {"symbol": "NIFTYCASE", "name": "Zerodha Nifty ETF", "segment": "ETF"},
+    {"symbol": "MID150CASE", "name": "Zerodha Nifty Midcap 150 ETF", "segment": "ETF"},
 ]
 
 

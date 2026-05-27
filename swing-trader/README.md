@@ -1,6 +1,6 @@
 # Swing Trader
 
-Self-hosted single-user swing trading dashboard for Indian equities (Nifty 50 + NIFTYBEES + MID150BEES).
+Self-hosted single-user swing trading dashboard for Indian equities (Nifty 50 + NIFTYCASE + MID150CASE).
 
 ## Quick start
 
