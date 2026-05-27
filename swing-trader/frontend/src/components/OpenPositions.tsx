@@ -13,6 +13,11 @@ function fmtPct(v: number | null, plus = false) {
   return `${plus && v >= 0 ? '+' : ''}${v.toFixed(2)}%`
 }
 
+function fmtInr(v: number | null) {
+  if (v == null) return '–'
+  return `${v >= 0 ? '+' : ''}₹${Math.abs(v).toFixed(0)}`
+}
+
 export default function OpenPositions({ onTradeChange }: { onTradeChange?: () => void }) {
   const [positions, setPositions] = useState<OpenPosition[]>([])
   const [loading, setLoading] = useState(false)
@@ -67,7 +72,7 @@ export default function OpenPositions({ onTradeChange }: { onTradeChange?: () =>
         <table className="w-full text-sm border border-gray-800 rounded-lg overflow-hidden">
           <thead className="bg-gray-900 text-gray-400 text-xs uppercase">
             <tr>
-              {['Symbol', 'Entry', 'LTP', 'P&L%', 'Target', '→ Target', 'Curr SL', '→ SL', 'Days', 'State', ''].map(h => (
+              {['Symbol', 'Entry', 'LTP', 'P&L%', 'P&L ₹', 'Target', '→ Target', 'Curr SL', '→ SL', 'Days', 'State', ''].map(h => (
                 <th key={h} className="px-3 py-2 text-left whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -86,6 +91,9 @@ export default function OpenPositions({ onTradeChange }: { onTradeChange?: () =>
                 </td>
                 <td className={`px-3 py-2 font-mono ${pctColor(p.pnl_pct)}`}>
                   {fmtPct(p.pnl_pct, true)}
+                </td>
+                <td className={`px-3 py-2 font-mono ${pctColor(p.pnl_inr)}`}>
+                  {fmtInr(p.pnl_inr)}
                 </td>
                 <td className="px-3 py-2 text-green-500">
                   {p.initial_target_price ? `₹${p.initial_target_price.toFixed(1)}` : '–'}
