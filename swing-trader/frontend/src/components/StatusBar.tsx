@@ -50,12 +50,6 @@ export default function StatusBar({ refreshKey = 0 }: Props) {
             <span className="text-gray-500">₹{(stats.capital_deployed + stats.capital_available).toLocaleString('en-IN')}</span>
             {' deployed'}
           </span>
-          <span className="text-gray-400">
-            Positions: <span className="text-white">{stats.open_positions}</span>
-          </span>
-          <span className={stats.todays_pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
-            Today P&L: {stats.todays_pnl >= 0 ? '+' : ''}₹{stats.todays_pnl.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-          </span>
         </>
       )}
     </div>
