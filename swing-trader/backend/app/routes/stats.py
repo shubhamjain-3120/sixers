@@ -60,8 +60,6 @@ def get_summary(db: Session = Depends(get_db)):
         reason = t.exit_reason or ""
         if reason == "target":
             by_reason.target += 1
-        elif reason == "trailing_stop":
-            by_reason.trailing_stop += 1
         elif reason == "stop_loss":
             by_reason.stop_loss += 1
         elif reason == "time_stop":

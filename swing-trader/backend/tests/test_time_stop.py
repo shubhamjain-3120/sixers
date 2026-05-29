@@ -16,8 +16,6 @@ def cfg(db):
         target_pct=2.0,
         stop_loss_pct=4.0,
         time_stop_days=15,
-        trail_distance_pct=1.0,
-        trail_lock_floor_pct=0.5,
         max_concurrent_positions=8,
         min_score_threshold=60.0,
     )
@@ -39,9 +37,6 @@ def _open_trade(db, symbol="SBIN", entry_days_ago=16, gtt_id=1001, qty=10, entry
         initial_sl_price=round(entry_price * 0.96, 1),
         active_gtt_id=gtt_id,
         gtt_tag=f"trade_test_{gtt_id}",
-        trailing_state="initial",
-        high_water_mark=entry_price,
-        current_sl_price=round(entry_price * 0.96, 1),
         status="OPEN",
     )
     db.add(t)

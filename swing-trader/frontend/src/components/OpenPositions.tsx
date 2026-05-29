@@ -72,7 +72,7 @@ export default function OpenPositions({ onTradeChange }: { onTradeChange?: () =>
         <table className="w-full text-sm border border-gray-800 rounded-lg overflow-hidden">
           <thead className="bg-gray-900 text-gray-400 text-xs uppercase">
             <tr>
-              {['Symbol', 'Entry', 'LTP', 'P&L%', 'P&L ₹', 'Target', '→ Target', 'Curr SL', '→ SL', 'Days', 'State', ''].map(h => (
+              {['Symbol', 'Entry', 'LTP', 'P&L%', 'P&L ₹', 'Target', '→ Target', '→ SL', 'Days', ''].map(h => (
                 <th key={h} className="px-3 py-2 text-left whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -101,18 +101,10 @@ export default function OpenPositions({ onTradeChange }: { onTradeChange?: () =>
                 <td className="px-3 py-2 text-green-400 font-mono text-xs">
                   {fmtPct(p.pct_to_target, true)}
                 </td>
-                <td className="px-3 py-2 text-red-400">
-                  {p.current_sl_price ? `₹${p.current_sl_price.toFixed(1)}` : '–'}
-                </td>
                 <td className="px-3 py-2 text-red-400 font-mono text-xs">
                   {fmtPct(p.pct_to_sl)}
                 </td>
                 <td className="px-3 py-2 text-gray-400">{p.days_held ?? '–'}</td>
-                <td className="px-3 py-2 text-xs">
-                  <span className={p.trailing_state === 'trailing' ? 'text-blue-400' : 'text-gray-500'}>
-                    {p.trailing_state}
-                  </span>
-                </td>
                 <td className="px-3 py-2">
                   <button
                     onClick={e => { e.stopPropagation(); handleForceExit(p.id, p.symbol) }}

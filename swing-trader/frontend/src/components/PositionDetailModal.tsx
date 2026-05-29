@@ -103,13 +103,8 @@ export default function PositionDetailModal({ tradeId, onClose }: Props) {
                   />
                 )}
                 <Row label="Target" value={fmt(detail.initial_target_price, 2, '₹')} valueClass="text-green-400" />
-                <Row label="Stop Loss" value={fmt(detail.current_sl_price, 2, '₹')} valueClass="text-red-400" />
+                <Row label="Stop Loss" value={fmt(detail.initial_sl_price, 2, '₹')} valueClass="text-red-400" />
                 <Row label="Days Held" value={String(detail.days_held ?? '–')} />
-                <Row
-                  label="Trailing State"
-                  value={detail.trailing_state ?? '–'}
-                  valueClass={detail.trailing_state === 'trailing' ? 'text-blue-400' : 'text-gray-400'}
-                />
               </div>
             </div>
 

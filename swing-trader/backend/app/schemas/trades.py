@@ -40,10 +40,8 @@ class OpenPositionRow(BaseModel):
     pnl_pct: Optional[float] = None
     pnl_inr: Optional[float] = None
     initial_target_price: Optional[float] = None
-    current_sl_price: Optional[float] = None
-    pct_to_target: Optional[float] = None   # (target - ltp) / ltp * 100
-    pct_to_sl: Optional[float] = None       # (sl - ltp) / ltp * 100, negative
-    trailing_state: str
+    pct_to_target: Optional[float] = None
+    pct_to_sl: Optional[float] = None
     days_held: Optional[int] = None
 
     class Config:
@@ -83,9 +81,6 @@ class TradeDetail(BaseModel):
     capital_deployed: float
     initial_target_price: Optional[float] = None
     initial_sl_price: Optional[float] = None
-    current_sl_price: Optional[float] = None
-    high_water_mark: Optional[float] = None
-    trailing_state: Optional[str] = None
     pnl_inr: Optional[float] = None
     pnl_pct: Optional[float] = None
     exit_reason: Optional[str] = None

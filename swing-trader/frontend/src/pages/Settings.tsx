@@ -96,8 +96,6 @@ export default function Settings() {
         <Field label="Target (%)" value={cfg.target_pct} onChange={v => handleChange('target_pct', v)} step={0.1} />
         <Field label="Stop loss (%)" value={cfg.stop_loss_pct} onChange={v => handleChange('stop_loss_pct', v)} step={0.1} />
         <Field label="Time stop (trading days)" value={cfg.time_stop_days} onChange={v => handleChange('time_stop_days', v)} />
-        <Field label="Trail distance (%)" value={cfg.trail_distance_pct} onChange={v => handleChange('trail_distance_pct', v)} step={0.1} />
-        <Field label="Trail lock floor (%)" value={cfg.trail_lock_floor_pct} onChange={v => handleChange('trail_lock_floor_pct', v)} step={0.1} />
       </Section>
 
       {msg && <p className="text-sm text-blue-400 mb-4">{msg}</p>}
