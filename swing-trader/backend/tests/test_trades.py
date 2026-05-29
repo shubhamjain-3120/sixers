@@ -233,7 +233,7 @@ def test_execute_entry_insufficient_capital(seeded_db):
 # ── execute_force_exit tests ──────────────────────────────────────────────────
 
 def test_force_exit_cancels_gtt_and_market_sells(seeded_db):
-    """Force exit cancels active GTT then places market sell."""
+    """Force exit cancels active GTT then places limit sell at LTP - 0.5."""
     db = seeded_db
     trade = Trade(
         symbol="HDFCBANK", segment="NIFTY50_STOCK",
@@ -247,6 +247,7 @@ def test_force_exit_cancels_gtt_and_market_sells(seeded_db):
     db.refresh(trade)
 
     mock_kite = MagicMock()
+    mock_kite.ltp.return_value = {"NSE:HDFCBANK": {"last_price": 1512.0}}
     mock_kite.place_order.return_value = "SELL_ORDER_1"
     mock_kite.orders.return_value = [{
         "order_id": "SELL_ORDER_1",
@@ -266,7 +267,8 @@ def test_force_exit_cancels_gtt_and_market_sells(seeded_db):
     mock_kite.delete_gtt.assert_called_once_with(9999)
     sell_call = mock_kite.place_order.call_args
     assert sell_call.kwargs["transaction_type"] == "SELL"
-    assert sell_call.kwargs["order_type"] == "MARKET"
+    assert sell_call.kwargs["order_type"] == "LIMIT"
+    assert sell_call.kwargs["price"] == 1511.5
 
     db.refresh(trade)
     assert trade.status == "CLOSED"
