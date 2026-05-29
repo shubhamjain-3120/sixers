@@ -5,8 +5,6 @@ export interface Config {
   target_pct: number
   stop_loss_pct: number
   time_stop_days: number
-  trail_distance_pct: number
-  trail_lock_floor_pct: number
   max_concurrent_positions: number
   min_score_threshold: number
   min_shubham_score_threshold: number
@@ -51,10 +49,8 @@ export interface OpenPosition {
   pnl_pct: number | null
   pnl_inr: number | null
   initial_target_price: number | null
-  current_sl_price: number | null
   pct_to_target: number | null
   pct_to_sl: number | null
-  trailing_state: string
   days_held: number | null
 }
 
@@ -90,7 +86,6 @@ export interface StatsSummary {
   expectancy_pct: number
   by_exit_reason: {
     target: number
-    trailing_stop: number
     stop_loss: number
     time_stop: number
     manual: number
@@ -144,9 +139,6 @@ export interface TradeDetail extends ClosedTrade {
   capital_deployed: number
   initial_target_price: number | null
   initial_sl_price: number | null
-  current_sl_price: number | null
-  high_water_mark: number | null
-  trailing_state: string | null
   notes: string | null
   ltp_at_entry: number | null
   rsi_at_entry: number | null

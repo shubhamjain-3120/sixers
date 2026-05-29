@@ -24,8 +24,6 @@ def seeded_db(db):
         target_pct=2.0,
         stop_loss_pct=4.0,
         time_stop_days=15,
-        trail_distance_pct=1.0,
-        trail_lock_floor_pct=0.5,
         max_concurrent_positions=8,
         min_score_threshold=60.0,
     ))
@@ -137,7 +135,6 @@ def test_execute_entry_full_fill(seeded_db):
     assert trade.badge_at_entry == "GREEN"
     assert trade.llm_verdict_at_entry == "NOISE"
     assert trade.active_gtt_id == 9001
-    assert trade.trailing_state == "initial"
 
     # Verify OCO GTT was placed with two-leg trigger
     gtt_call = mock_kite.place_gtt.call_args
@@ -243,8 +240,7 @@ def test_force_exit_cancels_gtt_and_market_sells(seeded_db):
         entry_date=datetime.utcnow(), entry_price=1500.0,
         qty=5, capital_deployed=7500.0,
         active_gtt_id=9999, gtt_tag="trade_abc123",
-        trailing_state="initial", high_water_mark=1500.0,
-        current_sl_price=1440.0, status="OPEN",
+        status="OPEN",
     )
     db.add(trade)
     db.commit()

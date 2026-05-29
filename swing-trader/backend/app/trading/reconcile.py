@@ -59,9 +59,7 @@ def reconcile_exit(db: Session, kite, trade: Trade, gtt: dict):
     trade.pnl_pct = (fill_price - trade.entry_price) / trade.entry_price * 100
     trade.days_held = (order_time.date() - trade.entry_date.date()).days
 
-    if trade.trailing_state == "trailing":
-        trade.exit_reason = "trailing_stop"
-    elif trade.initial_target_price and fill_price >= trade.initial_target_price * 0.995:
+    if trade.initial_target_price and fill_price >= trade.initial_target_price * 0.995:
         trade.exit_reason = "target"
     else:
         trade.exit_reason = "stop_loss"

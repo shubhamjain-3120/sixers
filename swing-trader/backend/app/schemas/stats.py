@@ -5,7 +5,6 @@ from datetime import date
 
 class ExitReasonBreakdown(BaseModel):
     target: int = 0
-    trailing_stop: int = 0
     stop_loss: int = 0
     time_stop: int = 0
     manual: int = 0

@@ -115,9 +115,6 @@ def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_ver
         initial_target_price=target_price,
         initial_sl_price=sl_price,
         gtt_tag=gtt_tag,
-        trailing_state="initial",
-        high_water_mark=fill_price,
-        current_sl_price=sl_price,
         status="OPEN",
     )
     db.add(trade)

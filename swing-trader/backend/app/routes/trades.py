@@ -37,7 +37,7 @@ def get_open_trades(db: Session = Depends(get_db)):
         pnl_pct = ((ltp - t.entry_price) / t.entry_price * 100) if ltp else None
         pnl_inr = ((ltp - t.entry_price) * t.qty) if ltp else None
         pct_to_target = ((t.initial_target_price - ltp) / ltp * 100) if (ltp and t.initial_target_price) else None
-        pct_to_sl = ((t.current_sl_price - ltp) / ltp * 100) if (ltp and t.current_sl_price) else None
+        pct_to_sl = ((t.initial_sl_price - ltp) / ltp * 100) if (ltp and t.initial_sl_price) else None
         result.append(OpenPositionRow(
             id=t.id,
             symbol=t.symbol,
@@ -48,10 +48,8 @@ def get_open_trades(db: Session = Depends(get_db)):
             pnl_pct=pnl_pct,
             pnl_inr=pnl_inr,
             initial_target_price=t.initial_target_price,
-            current_sl_price=t.current_sl_price,
             pct_to_target=pct_to_target,
             pct_to_sl=pct_to_sl,
-            trailing_state=t.trailing_state or "initial",
             days_held=days,
         ))
     return result
@@ -92,9 +90,6 @@ def get_trade_detail(trade_id: int, db: Session = Depends(get_db)):
         capital_deployed=trade.capital_deployed,
         initial_target_price=trade.initial_target_price,
         initial_sl_price=trade.initial_sl_price,
-        current_sl_price=trade.current_sl_price,
-        high_water_mark=trade.high_water_mark,
-        trailing_state=trade.trailing_state,
         pnl_inr=trade.pnl_inr,
         pnl_pct=trade.pnl_pct,
         exit_reason=trade.exit_reason,

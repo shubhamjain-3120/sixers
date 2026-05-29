@@ -50,7 +50,6 @@ export default function History() {
           <StatCard label="Expectancy" value={`${stats.expectancy_pct.toFixed(2)}%`}
             color={stats.expectancy_pct >= 0 ? 'text-green-400' : 'text-red-400'} />
           <StatCard label="Target hits" value={stats.by_exit_reason.target.toString()} />
-          <StatCard label="Trail stops" value={stats.by_exit_reason.trailing_stop.toString()} />
           <StatCard label="Stop losses" value={stats.by_exit_reason.stop_loss.toString()} />
         </div>
       )}
@@ -176,8 +175,6 @@ function TradeDetailPanel({ detail }: { detail: TradeDetail }) {
         <InfoCell label="Capital" value={`₹${detail.capital_deployed.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`} />
         <InfoCell label="Initial target" value={detail.initial_target_price ? `₹${detail.initial_target_price.toFixed(1)}` : '–'} />
         <InfoCell label="Initial SL" value={detail.initial_sl_price ? `₹${detail.initial_sl_price.toFixed(1)}` : '–'} />
-        <InfoCell label="HWM" value={detail.high_water_mark ? `₹${detail.high_water_mark.toFixed(1)}` : '–'} />
-        <InfoCell label="Trail state" value={detail.trailing_state ?? '–'} />
         <InfoCell label="LLM verdict" value={detail.llm_verdict_at_entry ?? '–'} />
         {detail.notes && <InfoCell label="Notes" value={detail.notes} />}
       </div>
