@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard'
 import History from './pages/History'
 import Settings from './pages/Settings'
 import CandidateDetail from './pages/CandidateDetail'
+import MarketNews from './pages/MarketNews'
 
 function Nav() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/candidate/:symbol" element={<CandidateDetail />} />
+        <Route path="/market-news" element={<MarketNews />} />
         <Route path="/history" element={<History />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
