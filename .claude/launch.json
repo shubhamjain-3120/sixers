@@ -7,6 +7,13 @@
       "runtimeArgs": ["run", "dev"],
       "cwd": "swing-trader/frontend",
       "port": 5174
+    },
+    {
+      "name": "swing-trader-backend",
+      "runtimeExecutable": "/Users/shubhamjain/sixers/swing-trader/backend/venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--port", "8000"],
+      "cwd": "swing-trader/backend",
+      "port": 8000
     }
   ]
 }

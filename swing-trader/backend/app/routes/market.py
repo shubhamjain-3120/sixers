@@ -9,6 +9,8 @@ from fastapi import APIRouter, Query
 from openai import OpenAI
 
 from app.config import settings
+from app.market.global_cues import fetch_global_cues
+from app.market.summary import summarise
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/market", tags=["market"])
@@ -17,6 +19,10 @@ CACHE_TTL = timedelta(minutes=15)
 
 _cache: Optional[dict] = None
 _cache_ts: Optional[datetime] = None
+
+# Separate cache for the combined market-news payload.
+_news_cache: Optional[dict] = None
+_news_cache_ts: Optional[datetime] = None
 
 SYSTEM_PROMPT = """You are a financial analyst covering Indian equity markets.
 You will be given today's top news headlines about NIFTY/Sensex and the broader Indian stock market.
@@ -138,5 +144,45 @@ def get_nifty_summary(force: bool = Query(default=False)):
 
     _cache = {k: v for k, v in result.items() if k != "cached"}
     _cache_ts = now
+
+    return result
+
+
+@router.get("/news-summary")
+def get_market_news(force: bool = Query(default=False)):
+    """
+    Combined "Market News" payload for a trader's pre-open read:
+    India headlines + a unified AI summary, global cues that predict NIFTY
+    (GIFT Nifty, US/Asian indices, macro), and overnight Indian ADR moves.
+    Cached for 15 minutes. Pass ?force=true to bypass the cache.
+    """
+    global _news_cache, _news_cache_ts
+
+    now = datetime.utcnow()
+    if (
+        not force
+        and _news_cache is not None
+        and _news_cache_ts is not None
+        and (now - _news_cache_ts) < CACHE_TTL
+    ):
+        return {**_news_cache, "cached": True}
+
+    headlines = _fetch_nifty_headlines()
+    cues = fetch_global_cues()
+    adrs = cues.pop("adrs", [])
+    llm_result = summarise(headlines, cues, adrs)
+
+    result = {
+        "summary": llm_result["summary"],
+        "direction": llm_result["direction"],
+        "headlines": headlines,
+        "global_cues": cues,
+        "adrs": adrs,
+        "fetched_at": now.isoformat() + "Z",
+        "cached": False,
+    }
+
+    _news_cache = {k: v for k, v in result.items() if k != "cached"}
+    _news_cache_ts = now
 
     return result

@@ -14,6 +14,8 @@ requests==2.32.3
 httpx==0.27.2
 apscheduler==3.10.4
 feedparser==6.0.11
+yfinance==1.4.1
+curl_cffi==0.15.0
 nsepython==2.9
 pytz==2024.2
 python-dotenv==1.0.1

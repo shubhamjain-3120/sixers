@@ -59,6 +59,30 @@ export interface NiftySummary {
 export const getNiftySummary = (force = false) =>
   api.get<NiftySummary>('/market/nifty-summary', { params: { force } }).then(r => r.data)
 
+export interface MarketQuote {
+  name: string
+  symbol?: string
+  last: number | null
+  change_pct: number
+  direction: 'up' | 'down' | 'flat'
+}
+export interface MarketNews {
+  summary: string
+  direction: 'up' | 'down' | 'flat'
+  headlines: Array<{ title: string; published_at: string; url: string }>
+  global_cues: {
+    gift_nifty: MarketQuote | null
+    us: MarketQuote[]
+    asia: MarketQuote[]
+    macro: MarketQuote[]
+  }
+  adrs: MarketQuote[]
+  fetched_at: string
+  cached: boolean
+}
+export const getMarketNews = (force = false) =>
+  api.get<MarketNews>('/market/news-summary', { params: { force } }).then(r => r.data)
+
 // News
 export interface TestClassifyRequest {
   symbol: string
