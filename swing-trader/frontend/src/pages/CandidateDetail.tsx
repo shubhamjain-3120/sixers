@@ -79,9 +79,16 @@ export default function CandidateDetail() {
       <NewsSection
         detail={detail}
         classifying={classifying}
-        onReanalyze={() => {
+        onReanalyze={async () => {
           setClassifying(true)
-          triggerNewsClassify().finally(() => setClassifying(false))
+          try {
+            await triggerNewsClassify()
+            await new Promise(r => setTimeout(r, 3000))
+            const d = await getCandidateDetail(symbol!)
+            setDetail(d)
+          } finally {
+            setClassifying(false)
+          }
         }}
       />
 
