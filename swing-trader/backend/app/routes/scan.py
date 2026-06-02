@@ -227,6 +227,7 @@ def get_candidate_detail(symbol: str, db: Session = Depends(get_db)):
         score=s.score,
         shubham_score=s.shubham_score,
         green_after_red=s.green_after_red,
+        atr_14=s.atr_14,
         sparkline_data=[],
         llm_summary=news_cls.summary if news_cls else None,
         news_verdict=news_cls.verdict if news_cls else None,

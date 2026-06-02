@@ -127,6 +127,7 @@ def _do_scan(db: Session):
             green_after_red=signals.green_after_red,
             score=score,
             shubham_score=shubham_score,
+            atr_14=signals.atr_14,
         )
 
         if existing_scan:

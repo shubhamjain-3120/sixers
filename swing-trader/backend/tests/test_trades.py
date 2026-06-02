@@ -3,7 +3,8 @@ import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch, call
 
-from app.db.models import Config, Instrument, Trade, KiteToken, SetupClassification, NewsClassification
+from datetime import date
+from app.db.models import Config, Instrument, Trade, KiteToken, DailyScan, SetupClassification, NewsClassification
 from app.trading.entry import execute_entry, execute_force_exit
 from app.kite.orders import wait_for_fill
 
@@ -216,6 +217,44 @@ def test_execute_entry_no_fill_returns_none(seeded_db):
 
     assert result is None
     mock_kite.cancel_order.assert_called_once()
+
+
+def test_execute_entry_atr_stop(seeded_db):
+    """With a DailyScan row carrying atr_14=18.0, fill=1500 → atr_pct=1.2,
+    raw sl=3.0 → clamped to floor 3.0 → sl_price≈1455.0."""
+    db = seeded_db
+    db.add(DailyScan(
+        symbol="HDFCBANK",
+        scan_date=date.today(),
+        ltp=1500.0,
+        prev_close=1490.0,
+        score=70.0,
+        atr_14=18.0,
+    ))
+    db.commit()
+
+    fill_price = 1500.0
+    qty = 10
+
+    mock_kite = MagicMock()
+    mock_kite.ltp.return_value = {"NSE:HDFCBANK": {"last_price": fill_price}}
+    mock_kite.place_order.return_value = "ORDER_ATR"
+    mock_kite.orders.return_value = [_make_full_fill_order("ORDER_ATR", fill_price, qty)]
+    mock_kite.place_gtt.return_value = {"trigger_id": 9010}
+
+    with patch("app.trading.entry.get_kite_client", return_value=mock_kite), \
+         patch("time.sleep"):
+        result = execute_entry(db, "HDFCBANK")
+
+    assert result is not None
+    # atr_pct = 18/1500*100 = 1.2, raw = 1.2*2.5 = 3.0, floor clamps to 3.0
+    expected_sl = round(fill_price * (1 - 3.0 / 100), 1)
+    assert abs(result["sl_price"] - expected_sl) < 0.2
+
+    trade = db.query(Trade).filter(Trade.symbol == "HDFCBANK").first()
+    assert trade is not None
+    assert trade.sl_pct_at_entry == pytest.approx(3.0)
+    assert trade.atr_pct_at_entry == pytest.approx(1.2)
 
 
 def test_execute_entry_insufficient_capital(seeded_db):

@@ -15,6 +15,25 @@ class SignalsBundle:
     pivot_support: float
     pivot_resistance: float
     green_after_red: bool
+    atr_14: float = 0.0
+
+
+def atr_14(highs: List[float], lows: List[float], closes: List[float]) -> float:
+    """Wilder's ATR, 14 periods. Returns last value (absolute price units)."""
+    if len(closes) < 15:
+        return 0.0
+    trs = []
+    for i in range(1, len(closes)):
+        tr = max(
+            highs[i] - lows[i],
+            abs(highs[i] - closes[i - 1]),
+            abs(lows[i] - closes[i - 1]),
+        )
+        trs.append(tr)
+    atr = sum(trs[:14]) / 14
+    for i in range(14, len(trs)):
+        atr = (atr * 13 + trs[i]) / 14
+    return round(atr, 2)
 
 
 def rsi_14(closes: List[float]) -> float:
@@ -115,6 +134,7 @@ def compute_signals(closes: List[float], highs: List[float], lows: List[float],
     sl30, sh30 = swing_low_high(lows, highs, 30)
     s1, r1 = pivot_s1_r1(highs[-2], lows[-2], closes[-2], close_today)
     gar = green_after_red(closes)
+    atr = atr_14(highs, lows, closes)
 
     return SignalsBundle(
         rsi_14=rsi,
@@ -128,4 +148,5 @@ def compute_signals(closes: List[float], highs: List[float], lows: List[float],
         pivot_support=s1,
         pivot_resistance=r1,
         green_after_red=gar,
+        atr_14=atr,
     )

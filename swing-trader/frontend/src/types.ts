@@ -8,6 +8,10 @@ export interface Config {
   max_concurrent_positions: number
   min_score_threshold: number
   min_shubham_score_threshold: number
+  sl_mode: 'atr' | 'fixed'
+  atr_sl_multiplier: number
+  sl_floor_pct: number
+  sl_cap_pct: number
   updated_at: string | null
 }
 
@@ -113,6 +117,7 @@ export interface CandidateDetail extends CandidateRow {
   swing_low_30d: number | null
   swing_high_30d: number | null
   green_after_red: boolean | null
+  atr_14: number | null
   news_verdict: string | null
   news_confidence: number | null
   news_headlines: PerHeadline[]

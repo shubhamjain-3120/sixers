@@ -12,7 +12,13 @@ export default function Settings() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
   useEffect(() => {
-    getConfig().then(setCfg).catch(() => {})
+    getConfig().then(c => setCfg({
+      sl_mode: 'atr',
+      atr_sl_multiplier: 2.5,
+      sl_floor_pct: 3.0,
+      sl_cap_pct: 6.0,
+      ...c,
+    })).catch(() => {})
     getScanStatus().then(s => { setScanStatus(s); setLastRefresh(new Date()) }).catch(() => {})
   }, [])
 
@@ -20,6 +26,8 @@ export default function Settings() {
     if (!cfg) return
     setCfg({ ...cfg, [key]: key.endsWith('_days') || key === 'total_capital_inr' || key === 'max_concurrent_positions' ? parseInt(value) : parseFloat(value) })
   }
+
+  const handleMode = (value: string) => cfg && setCfg({ ...cfg, sl_mode: value as 'atr' | 'fixed' })
 
   const handleSave = async () => {
     if (!cfg) return
@@ -100,7 +108,23 @@ export default function Settings() {
       {/* Exit Rules */}
       <Section title="Exit Rules">
         <Field label="Target (%)" value={cfg.target_pct} onChange={v => handleChange('target_pct', v)} step={0.1} />
-        <Field label="Stop loss (%)" value={cfg.stop_loss_pct} onChange={v => handleChange('stop_loss_pct', v)} step={0.1} />
+        <div className="flex items-center justify-between gap-4">
+          <label className="text-sm text-gray-300 flex-1">Stop-loss mode</label>
+          <select value={cfg.sl_mode} onChange={e => handleMode(e.target.value)}
+            className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+            <option value="atr">Volatility (ATR)</option>
+            <option value="fixed">Fixed %</option>
+          </select>
+        </div>
+        {(!cfg.sl_mode || cfg.sl_mode === 'atr') ? (
+          <>
+            <Field label="ATR multiplier" value={cfg.atr_sl_multiplier} onChange={v => handleChange('atr_sl_multiplier', v)} step={0.1} />
+            <Field label="SL floor (%)" value={cfg.sl_floor_pct} onChange={v => handleChange('sl_floor_pct', v)} step={0.1} />
+            <Field label="SL cap (%)" value={cfg.sl_cap_pct} onChange={v => handleChange('sl_cap_pct', v)} step={0.1} />
+          </>
+        ) : (
+          <Field label="Stop loss (%)" value={cfg.stop_loss_pct} onChange={v => handleChange('stop_loss_pct', v)} step={0.1} />
+        )}
         <Field label="Time stop (trading days)" value={cfg.time_stop_days} onChange={v => handleChange('time_stop_days', v)} />
       </Section>
 

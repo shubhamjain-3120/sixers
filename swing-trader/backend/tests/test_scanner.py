@@ -2,6 +2,7 @@
 import pytest
 from app.scanner.signals import (
     rsi_14,
+    atr_14,
     pct_below_high,
     dist_from_sma_pct,
     volume_ratio,
@@ -12,6 +13,37 @@ from app.scanner.signals import (
     SignalsBundle,
 )
 from app.scanner.scorer import compute_score
+
+
+# ── ATR ──────────────────────────────────────────────────────────────────────
+
+def test_atr_too_short_returns_zero():
+    closes = [100.0] * 14
+    highs  = [c + 1 for c in closes]
+    lows   = [c - 1 for c in closes]
+    assert atr_14(highs, lows, closes) == 0.0
+
+
+def test_atr_known_value():
+    """16-bar series with constant H-L range of 2.0 and no gap between bars.
+    TR = max(H-L, |H-prev_C|, |L-prev_C|) = max(2, 1, 1) = 2 for every bar.
+    Seed ATR = mean(first 14 TRs) = 2.0.
+    Wilder update: atr = (2*13 + 2) / 14 = 2.0 (stays at 2.0).
+    """
+    closes = [100.0] * 16
+    highs  = [c + 1 for c in closes]
+    lows   = [c - 1 for c in closes]
+    result = atr_14(highs, lows, closes)
+    assert result == pytest.approx(2.0)
+
+
+def test_atr_returned_in_signals_bundle():
+    closes = [100.0 + i * 0.5 for i in range(20)]
+    highs  = [c + 2 for c in closes]
+    lows   = [c - 2 for c in closes]
+    volumes = [1000] * 20
+    s = compute_signals(closes, highs, lows, volumes)
+    assert s.atr_14 > 0.0
 
 
 # ── RSI ──────────────────────────────────────────────────────────────────────
