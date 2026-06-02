@@ -28,11 +28,11 @@ export default function PriceChart({ chartData, support, resistance }: Props) {
     : chartData
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-4">
       <div className="flex items-center gap-2 mb-1">
-        <h2 className="text-sm text-gray-400">90-day Close</h2>
+        <h2 className="text-sm text-gray-600 dark:text-gray-400">90-day Close</h2>
         {zoomDomain && (
-          <button onClick={() => setZoomDomain(null)} className="text-xs text-blue-400 hover:text-blue-300">
+          <button onClick={() => setZoomDomain(null)} className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
             Reset zoom
           </button>
         )}

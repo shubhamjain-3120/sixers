@@ -37,18 +37,18 @@ export default function History() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-xl font-bold text-white mb-6">Trade History</h1>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Trade History</h1>
 
       {/* Stats summary */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <StatCard label="Total Trades" value={stats.total_closed_trades.toString()} />
           <StatCard label="Win Rate" value={`${(stats.win_rate * 100).toFixed(1)}%`}
-            color={stats.win_rate >= 0.5 ? 'text-green-400' : 'text-red-400'} />
-          <StatCard label="Avg Win" value={`+${stats.avg_win_pct.toFixed(2)}%`} color="text-green-400" />
-          <StatCard label="Avg Loss" value={`${stats.avg_loss_pct.toFixed(2)}%`} color="text-red-400" />
+            color={stats.win_rate >= 0.5 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} />
+          <StatCard label="Avg Win" value={`+${stats.avg_win_pct.toFixed(2)}%`} color="text-green-600 dark:text-green-400" />
+          <StatCard label="Avg Loss" value={`${stats.avg_loss_pct.toFixed(2)}%`} color="text-red-600 dark:text-red-400" />
           <StatCard label="Expectancy" value={`${stats.expectancy_pct.toFixed(2)}%`}
-            color={stats.expectancy_pct >= 0 ? 'text-green-400' : 'text-red-400'} />
+            color={stats.expectancy_pct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} />
           <StatCard label="Target hits" value={stats.by_exit_reason.target.toString()} />
           <StatCard label="Stop losses" value={stats.by_exit_reason.stop_loss.toString()} />
         </div>
@@ -56,15 +56,15 @@ export default function History() {
 
       {/* By LLM verdict breakdown */}
       {stats && Object.keys(stats.by_llm_verdict).length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
-          <h2 className="text-xs text-gray-400 uppercase mb-3">Win rate by LLM verdict</h2>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-6">
+          <h2 className="text-xs text-gray-600 dark:text-gray-400 uppercase mb-3">Win rate by LLM verdict</h2>
           <div className="flex flex-wrap gap-4">
             {Object.entries(stats.by_llm_verdict).map(([verdict, vs]) => (
               <div key={verdict} className="text-sm">
                 <span className="text-gray-500">{verdict}: </span>
-                <span className="text-white font-mono">{vs.trades} trades</span>
+                <span className="text-gray-900 dark:text-white font-mono">{vs.trades} trades</span>
                 <span className="text-gray-500 mx-1">·</span>
-                <span className={vs.win_rate >= 0.5 ? 'text-green-400' : 'text-red-400'}>
+                <span className={vs.win_rate >= 0.5 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                   {(vs.win_rate * 100).toFixed(0)}% WR
                 </span>
               </div>
@@ -75,8 +75,8 @@ export default function History() {
 
       {/* Equity curve */}
       {equity.length > 1 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
-          <h2 className="text-sm text-gray-400 mb-3">Equity Curve (90d)</h2>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-6">
+          <h2 className="text-sm text-gray-600 dark:text-gray-400 mb-3">Equity Curve (90d)</h2>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={equity}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
@@ -94,8 +94,8 @@ export default function History() {
 
       {/* Trade table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm border border-gray-800 rounded-lg overflow-hidden">
-          <thead className="bg-gray-900 text-gray-400 text-xs uppercase">
+        <table className="w-full text-sm border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+          <thead className="bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 text-xs uppercase">
             <tr>
               <th className="px-3 py-2 w-6" />
               {['Symbol', 'Entry', 'Exit', 'Entry ₹', 'Exit ₹', 'P&L%', 'P&L ₹', 'Days', 'Reason', 'Pull', 'Shub'].map(h => (
@@ -106,26 +106,26 @@ export default function History() {
           <tbody>
             {trades.map(t => {
               const pnl = t.pnl_pct ?? 0
-              const pnlColor = pnl >= 0 ? 'text-green-400' : 'text-red-400'
+              const pnlColor = pnl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               const isExpanded = expandedId === t.id
               return (
                 <>
                   <tr
                     key={t.id}
-                    className={`border-t border-gray-800 cursor-pointer transition-colors ${isExpanded ? 'bg-gray-900' : 'hover:bg-gray-900/50'}`}
+                    className={`border-t border-gray-200 dark:border-gray-800 cursor-pointer transition-colors ${isExpanded ? 'bg-white dark:bg-gray-900' : 'hover:bg-gray-100 dark:hover:bg-gray-900/50'}`}
                     onClick={() => toggleDetail(t.id)}
                   >
                     <td className="px-3 py-2 text-gray-600 text-xs">{isExpanded ? '▲' : '▶'}</td>
-                    <td className="px-3 py-2 font-semibold text-white">{t.symbol}</td>
-                    <td className="px-3 py-2 text-gray-400">{t.entry_date ? format(new Date(t.entry_date), 'dd MMM') : '–'}</td>
-                    <td className="px-3 py-2 text-gray-400">{t.exit_date ? format(new Date(t.exit_date), 'dd MMM') : '–'}</td>
+                    <td className="px-3 py-2 font-semibold text-gray-900 dark:text-white">{t.symbol}</td>
+                    <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{t.entry_date ? format(new Date(t.entry_date), 'dd MMM') : '–'}</td>
+                    <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{t.exit_date ? format(new Date(t.exit_date), 'dd MMM') : '–'}</td>
                     <td className="px-3 py-2">₹{t.entry_price.toFixed(1)}</td>
                     <td className="px-3 py-2">{t.exit_price ? `₹${t.exit_price.toFixed(1)}` : '–'}</td>
                     <td className={`px-3 py-2 font-mono ${pnlColor}`}>{pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}%</td>
                     <td className={`px-3 py-2 font-mono ${pnlColor}`}>
                       {t.pnl_inr != null ? `${t.pnl_inr >= 0 ? '+' : ''}₹${t.pnl_inr.toFixed(0)}` : '–'}
                     </td>
-                    <td className="px-3 py-2 text-gray-400">{t.days_held ?? '–'}</td>
+                    <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{t.days_held ?? '–'}</td>
                     <td className="px-3 py-2 text-xs text-gray-500">{t.exit_reason ?? '–'}</td>
                     <td className="px-3 py-2 font-mono text-blue-300">
                       {t.pullback_score_at_entry != null ? t.pullback_score_at_entry.toFixed(0) : '–'}
@@ -135,7 +135,7 @@ export default function History() {
                     </td>
                   </tr>
                   {isExpanded && (
-                    <tr key={`${t.id}-detail`} className="border-t border-gray-800 bg-gray-950">
+                    <tr key={`${t.id}-detail`} className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
                       <td colSpan={12} className="p-4">
                         {detailLoading && <p className="text-gray-500 text-sm">Loading...</p>}
                         {detail && detail.id === t.id && <TradeDetailPanel detail={detail} />}
@@ -229,14 +229,14 @@ function InfoCell({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-xs text-gray-500">{label}</div>
-      <div className="text-sm text-white font-mono">{value}</div>
+      <div className="text-sm text-gray-900 dark:text-white font-mono">{value}</div>
     </div>
   )
 }
 
-function StatCard({ label, value, color = 'text-white' }: { label: string; value: string; color?: string }) {
+function StatCard({ label, value, color = 'text-gray-900 dark:text-white' }: { label: string; value: string; color?: string }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-3">
       <div className="text-xs text-gray-500 mb-1">{label}</div>
       <div className={`text-lg font-bold font-mono ${color}`}>{value}</div>
     </div>

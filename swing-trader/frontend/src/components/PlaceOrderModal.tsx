@@ -85,23 +85,23 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-white">Place Order — {candidate.symbol}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white text-xl">✕</button>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Place Order — {candidate.symbol}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-900 dark:hover:text-white text-xl">✕</button>
         </div>
 
         {/* Price context */}
         <div className="space-y-1.5 text-sm mb-4">
           <Row label="Segment" value={candidate.segment} />
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Current LTP</span>
+            <span className="text-gray-600 dark:text-gray-400">Current LTP</span>
             <span className="flex items-center gap-1.5">
-              <span className="text-gray-200">{fmt(ltp)}</span>
+              <span className="text-gray-800 dark:text-gray-200">{fmt(ltp)}</span>
               <button
                 onClick={fetchLtp}
                 disabled={ltpLoading}
-                className="text-gray-500 hover:text-white disabled:opacity-40 text-sm leading-none"
+                className="text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-40 text-sm leading-none"
               >
                 {ltpLoading ? '…' : '↻'}
               </button>
@@ -111,17 +111,17 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
           <Row
             label="vs 20 DMA"
             value={fmtPct(candidate.dist_from_20dma_pct)}
-            color={(candidate.dist_from_20dma_pct ?? 0) < 0 ? 'text-yellow-400' : 'text-gray-300'}
+            color={(candidate.dist_from_20dma_pct ?? 0) < 0 ? 'text-amber-600 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-300'}
           />
           <Row
             label="vs 50 DMA"
             value={fmtPct(candidate.dist_from_50dma_pct)}
-            color={(candidate.dist_from_50dma_pct ?? 0) < 0 ? 'text-yellow-400' : 'text-gray-300'}
+            color={(candidate.dist_from_50dma_pct ?? 0) < 0 ? 'text-amber-600 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-300'}
           />
         </div>
 
         {/* Capital & quantity */}
-        <div className="border-t border-gray-800 pt-4 space-y-1.5 text-sm mb-4">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-4 space-y-1.5 text-sm mb-4">
           {capitalAvailable != null && (
             <Row label="Capital available" value={`₹${capitalAvailable.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`} />
           )}
@@ -129,7 +129,7 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
 
           {/* Editable capital override */}
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Capital to deploy</span>
+            <span className="text-gray-600 dark:text-gray-400">Capital to deploy</span>
             <input
               type="number"
               min={0}
@@ -137,7 +137,7 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
               value={customCapital}
               onChange={e => setCustomCapital(e.target.value)}
               placeholder={defaultCapital.toFixed(0)}
-              className="w-32 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-right text-white text-sm focus:outline-none focus:border-blue-500"
+              className="w-32 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-0.5 text-right text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -149,16 +149,16 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
         </div>
 
         {/* GTT bracket preview */}
-        <div className="border-t border-gray-800 pt-4 space-y-1.5 text-sm mb-4">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-4 space-y-1.5 text-sm mb-4">
           <Row
             label={`Target (+${cfg?.target_pct ?? 2}%)`}
             value={fmt(targetEst)}
-            color="text-green-400"
+            color="text-green-600 dark:text-green-400"
           />
           <Row
             label={`Stop Loss (−${cfg?.stop_loss_pct ?? 4}%)`}
             value={fmt(slEst)}
-            color="text-red-400"
+            color="text-red-600 dark:text-red-400"
           />
           <p className="text-xs text-gray-500 pt-1">
             GTT bracket order will be placed at Zerodha immediately after fill.
@@ -167,22 +167,22 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
 
         {/* News section */}
         {newsDetail && (
-          <div className="border-t border-gray-800 pt-4 mb-4">
+          <div className="border-t border-gray-200 dark:border-gray-800 pt-4 mb-4">
             <NewsSection detail={newsDetail} classifying={classifying} onReanalyze={handleReanalyze} />
           </div>
         )}
 
         {error && (
-          <div className="bg-red-950 border border-red-800 rounded p-3 text-red-400 text-sm mb-4 break-words">
+          <div className="bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded p-3 text-red-600 dark:text-red-400 text-sm mb-4 break-words">
             {error}
           </div>
         )}
-        {status === 'done' && <p className="text-green-400 text-sm mb-4">Order placed successfully!</p>}
+        {status === 'done' && <p className="text-green-600 dark:text-green-400 text-sm mb-4">Order placed successfully!</p>}
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded border border-gray-700 text-gray-400 hover:bg-gray-800"
+            className="flex-1 py-2 rounded border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
@@ -206,8 +206,8 @@ function Row({
 }) {
   return (
     <div className="flex justify-between">
-      <span className="text-gray-400">{label}</span>
-      <span className={color ?? (highlight ? 'text-white font-bold' : 'text-gray-200')}>{value}</span>
+      <span className="text-gray-600 dark:text-gray-400">{label}</span>
+      <span className={color ?? (highlight ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-800 dark:text-gray-200')}>{value}</span>
     </div>
   )
 }

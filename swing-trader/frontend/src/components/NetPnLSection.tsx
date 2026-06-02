@@ -19,7 +19,7 @@ function PnLCard({ label, value }: { label: string; value: number | null }) {
       </div>
     )
   }
-  const color = value >= 0 ? 'text-green-400' : 'text-red-400'
+  const color = value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
@@ -51,15 +51,15 @@ export default function NetPnLSection({ refreshKey = 0 }: Props) {
   const thisFyPnl = stats?.this_fy_pnl ?? null
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg px-5 py-3 mb-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-5 py-3 mb-4">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Net P&amp;L</span>
       </div>
       <div className="flex gap-8">
         <PnLCard label="Running Trades" value={runningPnl} />
-        <div className="w-px bg-gray-800 self-stretch" />
+        <div className="w-px bg-gray-100 dark:bg-gray-800 self-stretch" />
         <PnLCard label="This Month" value={thisMonthPnl} />
-        <div className="w-px bg-gray-800 self-stretch" />
+        <div className="w-px bg-gray-100 dark:bg-gray-800 self-stretch" />
         <PnLCard label={fyLabel} value={thisFyPnl} />
       </div>
     </div>

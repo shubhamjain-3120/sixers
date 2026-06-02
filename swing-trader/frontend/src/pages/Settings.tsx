@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getConfig, updateConfig, getKiteLoginUrl, refreshUniverse, testTelegram, triggerScan, getScanStatus } from '../api/client'
 import type { Config, ScanStatus } from '../types'
+import { useTheme, type Theme } from '../context/ThemeContext'
 
 export default function Settings() {
   const [cfg, setCfg] = useState<Config | null>(null)
@@ -71,11 +72,16 @@ export default function Settings() {
     }
   }
 
-  if (!cfg) return <div className="max-w-xl mx-auto px-4 py-10 text-gray-400">Loading…</div>
+  if (!cfg) return <div className="max-w-xl mx-auto px-4 py-10 text-gray-600 dark:text-gray-400">Loading…</div>
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6">
-      <h1 className="text-xl font-bold text-white mb-6">Settings</h1>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Settings</h1>
+
+      {/* Appearance */}
+      <Section title="Appearance">
+        <ThemeToggle />
+      </Section>
 
       {/* Kite Auth */}
       <Section title="Kite Connect">
@@ -98,7 +104,7 @@ export default function Settings() {
         <Field label="Time stop (trading days)" value={cfg.time_stop_days} onChange={v => handleChange('time_stop_days', v)} />
       </Section>
 
-      {msg && <p className="text-sm text-blue-400 mb-4">{msg}</p>}
+      {msg && <p className="text-sm text-blue-600 dark:text-blue-400 mb-4">{msg}</p>}
 
       <button
         onClick={handleSave}
@@ -117,10 +123,10 @@ export default function Settings() {
         </div>
         <div className="flex flex-wrap gap-4 text-xs text-gray-500">
           {scanStatus?.last_scan_at && (
-            <span>Last scan: <span className="text-gray-300">{scanStatus.last_scan_at}</span></span>
+            <span>Last scan: <span className="text-gray-700 dark:text-gray-300">{scanStatus.last_scan_at}</span></span>
           )}
           {lastRefresh && (
-            <span>Last refresh: <span className="text-gray-300">{lastRefresh.toLocaleTimeString()}</span></span>
+            <span>Last refresh: <span className="text-gray-700 dark:text-gray-300">{lastRefresh.toLocaleTimeString()}</span></span>
           )}
         </div>
       </Section>
@@ -128,10 +134,35 @@ export default function Settings() {
   )
 }
 
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  const options: { value: Theme; label: string }[] = [
+    { value: 'light', label: '☀️ Light' },
+    { value: 'dark', label: '🌙 Dark' },
+  ]
+  return (
+    <div className="inline-flex rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden">
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          onClick={() => setTheme(opt.value)}
+          className={`px-4 py-2 text-sm transition-colors ${
+            theme === opt.value
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-4">
-      <h2 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">{title}</h2>
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-4">
+      <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wider">{title}</h2>
       <div className="space-y-3">{children}</div>
     </div>
   )
@@ -140,13 +171,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, value, onChange, step = 1 }: { label: string; value: number; onChange: (v: string) => void; step?: number }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <label className="text-sm text-gray-300 flex-1">{label}</label>
+      <label className="text-sm text-gray-700 dark:text-gray-300 flex-1">{label}</label>
       <input
         type="number"
         value={value}
         step={step}
         onChange={e => onChange(e.target.value)}
-        className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white text-right"
+        className="w-28 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm text-gray-900 dark:text-white text-right"
       />
     </div>
   )
