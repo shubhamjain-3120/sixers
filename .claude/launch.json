@@ -3,10 +3,11 @@
   "configurations": [
     {
       "name": "swing-trader-frontend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "/Users/shubhamjain/sixers/swing-trader/frontend/node_modules/.bin/vite",
+      "runtimeArgs": [],
       "cwd": "swing-trader/frontend",
-      "port": 5174
+      "port": 5174,
+      "autoPort": true
     },
     {
       "name": "swing-trader-backend",

@@ -13,9 +13,10 @@ function cueChips(data: MarketNews): MarketQuote[] {
   const nasdaq = byName(data.global_cues.us, 'Nasdaq')
   const nikkei = byName(data.global_cues.asia, 'Nikkei 225')
   const hangSeng = byName(data.global_cues.asia, 'Hang Seng')
+  const vix = byName(data.global_cues.macro, 'India VIX')
   // HDFC Bank ADR — largest Nifty/Bank Nifty weight with a US listing.
   const hdfc = byName(data.adrs, 'HDFC ADR')
-  for (const q of [dow, nasdaq, nikkei, hangSeng, hdfc]) if (q) chips.push(q)
+  for (const q of [dow, nasdaq, nikkei, hangSeng, vix, hdfc]) if (q) chips.push(q)
   return chips
 }
 
