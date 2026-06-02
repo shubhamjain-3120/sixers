@@ -47,7 +47,16 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
   const qty = ltp > 0 && capital > 0 ? Math.floor(capital / ltp) : 0
   const entryEst = ltp * 1.001
   const targetEst = cfg ? entryEst * (1 + cfg.target_pct / 100) : 0
-  const slEst = cfg ? entryEst * (1 - cfg.stop_loss_pct / 100) : 0
+  const slPct = (() => {
+    if (!cfg) return 4
+    const atr = newsDetail?.atr_14
+    if (cfg.sl_mode === 'atr' && atr && entryEst > 0) {
+      const atrPct = atr / entryEst * 100
+      return Math.min(cfg.sl_cap_pct, Math.max(cfg.sl_floor_pct, cfg.atr_sl_multiplier * atrPct))
+    }
+    return cfg.stop_loss_pct
+  })()
+  const slEst = entryEst * (1 - slPct / 100)
   const capitalDeployed = entryEst * qty
 
   const handleReanalyze = async () => {
@@ -156,7 +165,7 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
             color="text-green-400"
           />
           <Row
-            label={`Stop Loss (−${cfg?.stop_loss_pct ?? 4}%)`}
+            label={`Stop Loss (−${slPct.toFixed(1)}%)`}
             value={fmt(slEst)}
             color="text-red-400"
           />

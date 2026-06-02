@@ -13,6 +13,10 @@ class ConfigRead(BaseModel):
     max_concurrent_positions: int
     min_score_threshold: float
     min_shubham_score_threshold: float
+    sl_mode: str = "atr"
+    atr_sl_multiplier: float = 2.5
+    sl_floor_pct: float = 3.0
+    sl_cap_pct: float = 6.0
     updated_at: Optional[datetime] = None
 
     class Config:
@@ -28,3 +32,7 @@ class ConfigUpdate(BaseModel):
     max_concurrent_positions: Optional[int] = None
     min_score_threshold: Optional[float] = None
     min_shubham_score_threshold: Optional[float] = None
+    sl_mode: Optional[str] = None
+    atr_sl_multiplier: Optional[float] = None
+    sl_floor_pct: Optional[float] = None
+    sl_cap_pct: Optional[float] = None

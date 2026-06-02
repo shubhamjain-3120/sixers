@@ -7,6 +7,7 @@ from app.db.models import Trade, Config, Instrument, DailyScan
 from app.kite.client import get_kite_client
 from app.kite.orders import log_order, wait_for_fill
 from app.kite.gtt import place_oco_gtt
+from app.trading.stops import compute_stop
 
 logger = logging.getLogger(__name__)
 
@@ -75,10 +76,7 @@ def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_ver
         except Exception as e:
             logger.warning(f"Cancel of partial remainder failed: {e}")
 
-    target_price = round(fill_price * (1 + cfg.target_pct / 100), 1)
-    sl_price = round(fill_price * (1 - cfg.stop_loss_pct / 100), 1)
-
-    # Capture both scores from the most recent scan for journal/backtest analysis.
+    # Capture both scores and ATR from the most recent scan.
     latest_scan = (
         db.query(DailyScan)
         .filter(DailyScan.symbol == symbol)
@@ -87,6 +85,11 @@ def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_ver
     )
     pullback_score = latest_scan.score if latest_scan else None
     shubham_score = latest_scan.shubham_score if latest_scan else None
+
+    target_price = round(fill_price * (1 + cfg.target_pct / 100), 1)
+    sl_price, sl_pct, atr_pct = compute_stop(
+        fill_price, latest_scan.atr_14 if latest_scan else None, cfg
+    )
 
     # Create trade row
     trade = Trade(
@@ -114,6 +117,8 @@ def execute_entry(db: Session, symbol: str, badge: Optional[str] = None, llm_ver
         capital_deployed=fill_price * filled_qty,
         initial_target_price=target_price,
         initial_sl_price=sl_price,
+        sl_pct_at_entry=sl_pct,
+        atr_pct_at_entry=atr_pct,
         gtt_tag=gtt_tag,
         status="OPEN",
     )

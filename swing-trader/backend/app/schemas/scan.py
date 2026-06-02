@@ -44,6 +44,7 @@ class CandidateDetail(CandidateRow):
     swing_low_30d: Optional[float] = None
     swing_high_30d: Optional[float] = None
     green_after_red: Optional[bool] = None
+    atr_14: Optional[float] = None
     news_verdict: Optional[str] = None       # NOISE | FUNDAMENTAL_RISK | MIXED | INSUFFICIENT_DATA
     news_confidence: Optional[float] = None
     news_headlines: List[PerHeadline] = []

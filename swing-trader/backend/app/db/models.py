@@ -19,6 +19,10 @@ class Config(Base):
     max_concurrent_positions = Column(Integer, default=8)
     min_score_threshold = Column(Float, default=60.0)
     min_shubham_score_threshold = Column(Float, default=60.0)
+    sl_mode = Column(String, default="atr")
+    atr_sl_multiplier = Column(Float, default=2.5)
+    sl_floor_pct = Column(Float, default=3.0)
+    sl_cap_pct = Column(Float, default=6.0)
     telegram_bot_token = Column(String, default="")
     telegram_chat_id = Column(String, default="")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -83,6 +87,7 @@ class DailyScan(Base):
     green_after_red = Column(Boolean, default=False)
     score = Column(Float, nullable=False)
     shubham_score = Column(Float)
+    atr_14 = Column(Float)
     __table_args__ = (UniqueConstraint("symbol", "scan_date"),)
 
 
@@ -148,6 +153,8 @@ class Trade(Base):
     pnl_inr = Column(Float)
     pnl_pct = Column(Float)
     days_held = Column(Integer)
+    sl_pct_at_entry = Column(Float)
+    atr_pct_at_entry = Column(Float)
     notes = Column(Text)
 
 

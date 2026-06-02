@@ -51,6 +51,13 @@ def run_migrations():
         ("trades", "pivot_support_at_entry", "REAL", "NULL"),
         ("trades", "pivot_resistance_at_entry", "REAL", "NULL"),
         ("trades", "green_after_red_at_entry", "BOOLEAN", "NULL"),
+        ("config", "sl_mode", "TEXT", "'atr'"),
+        ("config", "atr_sl_multiplier", "REAL", "2.5"),
+        ("config", "sl_floor_pct", "REAL", "3.0"),
+        ("config", "sl_cap_pct", "REAL", "6.0"),
+        ("daily_scans", "atr_14", "REAL", "NULL"),
+        ("trades", "sl_pct_at_entry", "REAL", "NULL"),
+        ("trades", "atr_pct_at_entry", "REAL", "NULL"),
     ]
     indexes = [
         # Covers: filter(scan_date=X, score>=Y).order_by(score DESC)
@@ -96,6 +103,40 @@ def run_migrations():
                 conn.rollback()
 
     _backfill_shubham_scores()
+    _backfill_atr()
+
+
+def _backfill_atr():
+    """One-time: compute atr_14 for daily_scan rows where it's NULL, using stored OHLCV."""
+    from app.scanner.signals import atr_14 as compute_atr
+    from app.db.models import DailyScan, OhlcvDaily
+
+    db = SessionLocal()
+    try:
+        rows = db.query(DailyScan).filter(DailyScan.atr_14.is_(None)).all()
+        if not rows:
+            return
+        for r in rows:
+            bars = (
+                db.query(OhlcvDaily)
+                .filter(OhlcvDaily.symbol == r.symbol, OhlcvDaily.date <= r.scan_date)
+                .order_by(OhlcvDaily.date.desc())
+                .limit(30)
+                .all()
+            )
+            if len(bars) < 15:
+                continue
+            bars = list(reversed(bars))
+            highs  = [b.high  for b in bars if b.high  is not None]
+            lows   = [b.low   for b in bars if b.low   is not None]
+            closes = [b.close for b in bars if b.close is not None]
+            if len(closes) >= 15:
+                r.atr_14 = compute_atr(highs, lows, closes)
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
 
 
 def _backfill_shubham_scores():
