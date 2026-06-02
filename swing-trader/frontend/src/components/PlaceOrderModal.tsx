@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { placeTrade, getConfig, getStatsSummary, getLiveLtp, getCandidateDetail, triggerNewsClassify } from '../api/client'
+import { placeTrade, getConfig, getStatsSummary, getLiveLtp, getCandidateDetail, triggerNewsClassify, getFunds } from '../api/client'
 import type { CandidateRow, CandidateDetail, Config, StatsSummary } from '../types'
 import NewsSection from './candidateDetail/NewsSection'
 
@@ -12,6 +12,7 @@ interface Props {
 export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props) {
   const [cfg, setCfg] = useState<Config | null>(null)
   const [stats, setStats] = useState<StatsSummary | null>(null)
+  const [kiteFunds, setKiteFunds] = useState<number | null>(null)
   const [customCapital, setCustomCapital] = useState('')
   const [ltp, setLtp] = useState(candidate.ltp ?? 0)
   const [ltpLoading, setLtpLoading] = useState(false)
@@ -34,6 +35,7 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
   useEffect(() => {
     getConfig().then(d => { setCfg(d); }).catch(() => {})
     getStatsSummary().then(setStats).catch(() => {})
+    getFunds().then(d => setKiteFunds(d.kite_funds_available)).catch(() => {})
     fetchLtp()
     getCandidateDetail(candidate.symbol).then(setNewsDetail).catch(() => {})
   }, [])
@@ -132,7 +134,10 @@ export default function PlaceOrderModal({ candidate, onClose, onSuccess }: Props
         {/* Capital & quantity */}
         <div className="border-t border-gray-200 dark:border-gray-800 pt-4 space-y-1.5 text-sm mb-4">
           {capitalAvailable != null && (
-            <Row label="Capital available" value={`₹${capitalAvailable.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`} />
+            <Row label="Capital deployed / total" value={`₹${stats!.capital_deployed.toLocaleString('en-IN', { maximumFractionDigits: 0 })} / ₹${(stats!.capital_deployed + capitalAvailable).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`} />
+          )}
+          {kiteFunds != null && (
+            <Row label="Kite funds available" value={`₹${kiteFunds.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`} />
           )}
           <Row label="Default allocation" value={`₹${defaultCapital.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`} />
 
