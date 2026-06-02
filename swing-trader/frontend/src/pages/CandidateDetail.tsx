@@ -55,22 +55,22 @@ export default function CandidateDetail() {
   )
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto px-4 py-10 text-gray-400">Loading {symbol}…</div>
+    return <div className="max-w-4xl mx-auto px-4 py-10 text-gray-600 dark:text-gray-400">Loading {symbol}…</div>
   }
   if (!detail) {
-    return <div className="max-w-4xl mx-auto px-4 py-10 text-gray-400">No scan data for {symbol}.</div>
+    return <div className="max-w-4xl mx-auto px-4 py-10 text-gray-600 dark:text-gray-400">No scan data for {symbol}.</div>
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-white text-sm mb-4">← Back</button>
+      <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900 dark:hover:text-white text-sm mb-4">← Back</button>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <h1 className="text-2xl font-bold text-white">{detail.symbol}</h1>
-        {detail.name && <span className="text-gray-400 text-sm">{detail.name}</span>}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{detail.symbol}</h1>
+        {detail.name && <span className="text-gray-600 dark:text-gray-400 text-sm">{detail.name}</span>}
         {detail.sector && <span className="text-gray-500 text-xs">· {detail.sector}</span>}
         {detail.segment === 'ETF' && (
-          <span className="text-xs text-blue-400 border border-blue-800 rounded px-1">ETF</span>
+          <span className="text-xs text-blue-600 dark:text-blue-400 border border-blue-800 rounded px-1">ETF</span>
         )}
       </div>
 

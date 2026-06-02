@@ -18,22 +18,22 @@ function fmtPct(v: number | null | undefined, plus = false) {
 }
 
 function pctColor(v: number | null | undefined) {
-  if (v == null) return 'text-gray-400'
-  return v >= 0 ? 'text-green-400' : 'text-red-400'
+  if (v == null) return 'text-gray-600 dark:text-gray-400'
+  return v >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
 }
 
 function verdictColor(v: string | null) {
-  if (!v) return 'text-gray-400'
-  if (v === 'NOISE') return 'text-gray-400'
-  if (v === 'FUNDAMENTAL_RISK') return 'text-red-400'
-  if (v === 'MIXED') return 'text-yellow-400'
-  return 'text-gray-400'
+  if (!v) return 'text-gray-600 dark:text-gray-400'
+  if (v === 'NOISE') return 'text-gray-600 dark:text-gray-400'
+  if (v === 'FUNDAMENTAL_RISK') return 'text-red-600 dark:text-red-400'
+  if (v === 'MIXED') return 'text-amber-600 dark:text-yellow-400'
+  return 'text-gray-600 dark:text-gray-400'
 }
 
-function Row({ label, value, valueClass = 'text-white' }: { label: string; value: string; valueClass?: string }) {
+function Row({ label, value, valueClass = 'text-gray-900 dark:text-white' }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div className="flex justify-between items-center py-1 border-b border-gray-800 last:border-0">
-      <span className="text-gray-400 text-xs">{label}</span>
+    <div className="flex justify-between items-center py-1 border-b border-gray-200 dark:border-gray-800 last:border-0">
+      <span className="text-gray-600 dark:text-gray-400 text-xs">{label}</span>
       <span className={`text-xs font-mono ${valueClass}`}>{value}</span>
     </div>
   )
@@ -60,17 +60,17 @@ export default function PositionDetailModal({ tradeId, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-gray-950 border border-gray-700 rounded-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 rounded-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
           <div>
-            <span className="text-white font-bold text-lg">{detail?.symbol ?? '…'}</span>
+            <span className="text-gray-900 dark:text-white font-bold text-lg">{detail?.symbol ?? '…'}</span>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-white text-xl leading-none"
+            className="text-gray-500 hover:text-gray-900 dark:hover:text-white text-xl leading-none"
           >
             ×
           </button>
@@ -102,8 +102,8 @@ export default function PositionDetailModal({ tradeId, onClose }: Props) {
                     valueClass={pctColor(detail.pnl_inr)}
                   />
                 )}
-                <Row label="Target" value={fmt(detail.initial_target_price, 2, '₹')} valueClass="text-green-400" />
-                <Row label="Stop Loss" value={fmt(detail.initial_sl_price, 2, '₹')} valueClass="text-red-400" />
+                <Row label="Target" value={fmt(detail.initial_target_price, 2, '₹')} valueClass="text-green-600 dark:text-green-400" />
+                <Row label="Stop Loss" value={fmt(detail.initial_sl_price, 2, '₹')} valueClass="text-red-600 dark:text-red-400" />
                 <Row label="Days Held" value={String(detail.days_held ?? '–')} />
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function PositionDetailModal({ tradeId, onClose }: Props) {
                     <Row
                       label="Green After Red"
                       value={detail.green_after_red_at_entry == null ? '–' : detail.green_after_red_at_entry ? 'Yes' : 'No'}
-                      valueClass={detail.green_after_red_at_entry ? 'text-green-400' : 'text-gray-400'}
+                      valueClass={detail.green_after_red_at_entry ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}
                     />
                     <Row label="Scan LTP" value={fmt(detail.ltp_at_entry, 2, '₹')} />
                   </div>

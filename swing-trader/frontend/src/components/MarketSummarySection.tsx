@@ -35,7 +35,7 @@ export default function MarketSummarySection() {
   useEffect(() => { load(false) }, [])
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg px-5 py-3 mb-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-5 py-3 mb-4">
       {/* Header row */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -47,7 +47,7 @@ export default function MarketSummarySection() {
         <button
           onClick={() => load(true)}
           disabled={loading}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700 hover:border-gray-500 hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
             <>
@@ -80,7 +80,7 @@ export default function MarketSummarySection() {
       )}
 
       {error && !loading && (
-        <p className="text-sm text-red-400/70 py-1">
+        <p className="text-sm text-red-600 dark:text-red-400/70 py-1">
           Could not load market news. Check backend logs or try refreshing.
         </p>
       )}
@@ -88,7 +88,7 @@ export default function MarketSummarySection() {
       {data && !loading && (
         <div className="space-y-3">
           {/* Unified pre-market read */}
-          <p className="text-sm text-gray-300 leading-relaxed">{data.summary}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{data.summary}</p>
 
           {/* Global cue strip */}
           {cueChips(data).length > 0 && (
@@ -101,7 +101,7 @@ export default function MarketSummarySection() {
           <div className="flex items-center justify-between">
             <Link
               to="/market-news"
-              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+              className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-300 transition-colors"
             >
               Show more
               <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

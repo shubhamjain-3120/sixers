@@ -11,7 +11,7 @@ function QuoteTable({ rows }: { rows: MarketQuote[] }) {
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-gray-800">
+        <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800">
           <th className="text-left font-medium py-2">Market</th>
           <th className="text-right font-medium py-2">Last</th>
           <th className="text-right font-medium py-2">Change</th>
@@ -19,12 +19,12 @@ function QuoteTable({ rows }: { rows: MarketQuote[] }) {
       </thead>
       <tbody>
         {rows.map((q, i) => (
-          <tr key={i} className="border-b border-gray-800/50 last:border-0">
-            <td className="py-2 text-gray-300">
+          <tr key={i} className="border-b border-gray-200 dark:border-gray-800/50 last:border-0">
+            <td className="py-2 text-gray-700 dark:text-gray-300">
               {q.name}
               {q.symbol && <span className="ml-2 text-xs text-gray-600">{q.symbol}</span>}
             </td>
-            <td className="py-2 text-right tabular-nums text-gray-400">
+            <td className="py-2 text-right tabular-nums text-gray-600 dark:text-gray-400">
               {q.last != null ? q.last.toLocaleString('en-IN') : '—'}
             </td>
             <td className={`py-2 text-right tabular-nums font-semibold ${changeColor(q.direction)}`}>
@@ -39,7 +39,7 @@ function QuoteTable({ rows }: { rows: MarketQuote[] }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg px-5 py-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-5 py-4">
       <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">{title}</h2>
       {children}
     </div>
@@ -66,14 +66,14 @@ export default function MarketNews() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/dashboard" className="text-sm text-gray-500 hover:text-gray-300">← Dashboard</Link>
-          <h1 className="text-xl font-bold text-white">Market News</h1>
+          <Link to="/dashboard" className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Dashboard</Link>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Market News</h1>
           {data && !loading && <DirectionBadge direction={data.direction} />}
         </div>
         <button
           onClick={() => load(true)}
           disabled={loading}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700 hover:border-gray-500 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Fetching…' : 'Refresh'}
         </button>
@@ -83,17 +83,17 @@ export default function MarketNews() {
         <p className="text-gray-500 text-sm">Fetching global cues and generating pre-market read…</p>
       )}
       {error && !loading && (
-        <p className="text-sm text-red-400/70">Could not load market news. Check backend logs or try refreshing.</p>
+        <p className="text-sm text-red-600 dark:text-red-400/70">Could not load market news. Check backend logs or try refreshing.</p>
       )}
 
       {data && !loading && (
         <>
           {/* Pre-market read */}
           <Section title="Pre-Market Read">
-            <p className="text-sm text-gray-300 leading-relaxed">{data.summary}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{data.summary}</p>
             <p className="text-xs text-gray-600 mt-3">
               Updated {timeAgo(data.fetched_at)}
-              {data.cached && <span className="ml-1 text-gray-700">· cached</span>}
+              {data.cached && <span className="ml-1 text-gray-500 dark:text-gray-700">· cached</span>}
             </p>
           </Section>
 
@@ -104,12 +104,12 @@ export default function MarketNews() {
             ) : (
               <ul className="space-y-2">
                 {data.headlines.map((h, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <span className="text-gray-600 mt-0.5 shrink-0 text-xs">
                       {new Date(h.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                     </span>
                     {h.url ? (
-                      <a href={h.url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-200 hover:underline leading-snug">
+                      <a href={h.url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-800 dark:hover:text-gray-200 hover:underline leading-snug">
                         {h.title}
                       </a>
                     ) : (

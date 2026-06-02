@@ -25,8 +25,8 @@ export default function StatusBar({ refreshKey = 0 }: Props) {
 
   if (auth && !auth.authenticated) {
     return (
-      <div className="flex items-center gap-3 bg-red-950 border border-red-800 rounded-lg px-4 py-2 text-sm mb-4">
-        <span className="text-red-400">🔴 Kite session expired — trading paused. Existing GTTs at Zerodha are safe.</span>
+      <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded-lg px-4 py-2 text-sm mb-4">
+        <span className="text-red-600 dark:text-red-400">🔴 Kite session expired — trading paused. Existing GTTs at Zerodha are safe.</span>
         <button
           onClick={handleLogin}
           className="ml-auto bg-red-700 hover:bg-red-600 text-white text-xs px-3 py-1 rounded"
@@ -38,14 +38,14 @@ export default function StatusBar({ refreshKey = 0 }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-sm mb-4">
-      <span className="text-green-400">
+    <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2 text-sm mb-4">
+      <span className="text-green-600 dark:text-green-400">
         🟢 Kite connected
       </span>
       {stats && (
         <>
-          <span className="text-gray-400">
-            Capital: <span className="text-white">₹{stats.capital_deployed.toLocaleString('en-IN')}</span>
+          <span className="text-gray-600 dark:text-gray-400">
+            Capital: <span className="text-gray-900 dark:text-white">₹{stats.capital_deployed.toLocaleString('en-IN')}</span>
             {' / '}
             <span className="text-gray-500">₹{(stats.capital_deployed + stats.capital_available).toLocaleString('en-IN')}</span>
             {' deployed'}
