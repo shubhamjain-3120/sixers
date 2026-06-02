@@ -12,13 +12,8 @@ export default function Settings() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
   useEffect(() => {
-    getConfig().then(c => setCfg({
-      sl_mode: 'atr',
-      atr_sl_multiplier: 2.5,
-      sl_floor_pct: 3.0,
-      sl_cap_pct: 6.0,
-      ...c,
-    })).catch(() => {})
+    const defaults = { sl_mode: 'atr' as const, atr_sl_multiplier: 2.5, sl_floor_pct: 3.0, sl_cap_pct: 6.0 }
+    getConfig().then(c => setCfg({ ...defaults, ...c })).catch(() => {})
     getScanStatus().then(s => { setScanStatus(s); setLastRefresh(new Date()) }).catch(() => {})
   }, [])
 
