@@ -19,12 +19,13 @@ You are given (a) recent NIFTY/Sensex news headlines, (b) global market cues tha
 (GIFT Nifty, US indices, Asian indices, India VIX, Brent crude, USD/INR), and (c) overnight moves in \
 Indian ADRs (Infosys, ICICI Bank, HDFC Bank, Wipro, Dr Reddy's).
 
-Write a concise 3-4 sentence "pre-market read": synthesise the cues into a single directional call for how \
-NIFTY is likely to open and behave, citing the most important drivers. Be specific with the numbers you were given.
+Write a concise pre-market read as 3-4 bullet points (each starting with "- " on its own line). Each bullet \
+should cover one key driver and include specific numbers from the data provided. Synthesise into a directional \
+call for how NIFTY is likely to open and behave.
 Also return the overall expected direction.
 Output ONLY valid JSON matching this schema:
 {
-  "summary": "<3-4 sentence pre-market read>",
+  "summary": "<3-4 bullet points, each on its own line starting with '- '>",
   "direction": "up" | "down" | "flat"
 }
 Rules:
