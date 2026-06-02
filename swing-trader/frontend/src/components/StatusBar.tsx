@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAuthStatus, getStatsSummary, getKiteLoginUrl } from '../api/client'
+import { getAuthStatus, getStatsSummary, getKiteLoginUrl, getFunds } from '../api/client'
 import type { AuthStatus, StatsSummary } from '../types'
 import { format } from 'date-fns'
 
@@ -10,10 +10,12 @@ interface Props {
 export default function StatusBar({ refreshKey = 0 }: Props) {
   const [auth, setAuth] = useState<AuthStatus | null>(null)
   const [stats, setStats] = useState<StatsSummary | null>(null)
+  const [kiteFunds, setKiteFunds] = useState<number | null>(null)
 
   useEffect(() => {
     getAuthStatus().then(setAuth).catch(() => {})
     getStatsSummary().then(setStats).catch(() => {})
+    getFunds().then(d => setKiteFunds(d.kite_funds_available)).catch(() => {})
   }, [refreshKey])
 
   const handleLogin = async () => {
@@ -50,6 +52,14 @@ export default function StatusBar({ refreshKey = 0 }: Props) {
             <span className="text-gray-500">₹{(stats.capital_deployed + stats.capital_available).toLocaleString('en-IN')}</span>
             {' deployed'}
           </span>
+          {kiteFunds != null && (
+            <>
+              <span className="text-gray-300 dark:text-gray-600">|</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Kite funds: <span className="text-gray-900 dark:text-white">₹{kiteFunds.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+              </span>
+            </>
+          )}
         </>
       )}
     </div>

@@ -80,6 +80,10 @@ class RateLimitedKite:
         _throttle()
         return self._kite.get_gtts()
 
+    def margins(self, segment: str = "equity"):
+        _throttle()
+        return self._kite.margins(segment)
+
 
 def get_kite_client(db: Session) -> Optional[RateLimitedKite]:
     token = get_valid_token(db)

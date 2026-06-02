@@ -19,7 +19,7 @@ from app.config import settings
 from app.db.session import engine, run_migrations
 from app.db.models import Base
 from app.jobs.scheduler import create_scheduler
-from app.routes import auth, config, universe, scan, trades, stats, system, telegram, news, market
+from app.routes import auth, config, universe, scan, trades, stats, system, telegram, news, market, funds
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -67,6 +67,7 @@ app.include_router(system.router)
 app.include_router(telegram.router)
 app.include_router(news.router)
 app.include_router(market.router)
+app.include_router(funds.router)
 
 
 @app.get("/")

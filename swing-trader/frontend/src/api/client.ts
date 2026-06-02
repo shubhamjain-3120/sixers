@@ -48,6 +48,10 @@ export const triggerTimestop = () => api.post('/system/time-stop').then(r => r.d
 export const triggerNewsClassify = () => api.post('/system/news-classify').then(r => r.data)
 export const getHealth = () => api.get('/system/health').then(r => r.data)
 
+// Funds
+export const getFunds = () =>
+  api.get<{ kite_funds_available: number | null }>('/funds').then(r => r.data)
+
 // Market
 export interface NiftySummary {
   summary: string
