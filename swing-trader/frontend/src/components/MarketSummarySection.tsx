@@ -85,7 +85,11 @@ export default function MarketSummarySection() {
       {data && !loading && (
         <div className="space-y-3">
           {/* Unified pre-market read */}
-          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{data.summary}</p>
+          <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside leading-relaxed">
+            {data.summary.split('\n').map(line => line.replace(/^-\s*/, '').trim()).filter(Boolean).map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
 
           {/* Global cue strip */}
           {cueChips(data).length > 0 && (

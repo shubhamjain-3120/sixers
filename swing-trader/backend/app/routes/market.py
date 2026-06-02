@@ -26,11 +26,11 @@ _news_cache_ts: Optional[datetime] = None
 
 SYSTEM_PROMPT = """You are a financial analyst covering Indian equity markets.
 You will be given today's top news headlines about NIFTY/Sensex and the broader Indian stock market.
-Write a concise 3-4 sentence summary of how the market performed, the key drivers (macro, geopolitical, sector-specific), and the overall tone.
+Write a concise summary as 3-4 bullet points (each starting with "- " on its own line) covering how the market performed, the key drivers (macro, geopolitical, sector-specific), and the overall tone.
 Also return the overall market direction based on the headlines.
 Output ONLY valid JSON matching this schema:
 {
-  "summary": "<3-4 sentence market narrative>",
+  "summary": "<3-4 bullet points, each on its own line starting with '- '>",
   "direction": "up" | "down" | "flat"
 }
 Rules:
